@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAC System V11 - Enterprise Import (Coluna I)</title>
+    <title>FAC System V12 - Importação Blindada</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -32,7 +32,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">Enterprise</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">V12</span></h1>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full" :class="statusColor"></span>
                         <p class="text-xs text-gray-500 font-medium">{{ statusText }}</p>
@@ -446,7 +446,7 @@
                 alert("Contrato excluído.");
             },
 
-            // --- IMPORTAR EXCEL LEGADO (INTELIGENTE - COLUNA I) ---
+            // --- IMPORTAR EXCEL LEGADO (INTELIGENTE V12) ---
             importLegacyExcel(event) {
                 const files = event.target.files;
                 if (!files.length || !this.selectedContract) return;
@@ -456,8 +456,10 @@
 
                 Array.from(files).forEach(file => {
                     Papa.parse(file, {
-                        header: false, // Ler como raw para detectar estrutura
+                        header: false,
                         skipEmptyLines: true,
+                        // DETECÇÃO AUTOMÁTICA DE SEPARADOR (Vírgula ou Ponto-e-Vírgula)
+                        delimiter: "", 
                         complete: (results) => {
                             this.parseRawSheet(results.data, groupedByMonth);
                             processedCount++;
@@ -475,41 +477,59 @@
                 let monthRef = null;
                 let engineer = "Importado";
                 let scores = {};
+                let noteColIndex = null;
 
-                // 1. Detectar Cabeçalho
-                for (let i = 0; i < Math.min(rows.length, 15); i++) {
-                    const rowStr = rows[i].join(' ').toUpperCase();
-                    if (rowStr.includes("FAC | OBRAS")) type = "OBRA";
-                    if (rowStr.includes("FAC | PROJETOS")) type = "PROJETO";
+                // 1. Detectar Cabeçalhos e Coluna de Notas
+                for (let i = 0; i < Math.min(rows.length, 25); i++) {
+                    const row = rows[i];
+                    const rowStr = row.join(' ').toUpperCase();
                     
-                    if (rowStr.includes("RESPONSAVEL PELA FISCALIZAÇÃO")) {
+                    if (rowStr.includes("FAC | OBRAS") || rowStr.includes("FAC|OBRAS")) type = "OBRA";
+                    if (rowStr.includes("FAC | PROJETOS") || rowStr.includes("FAC|PROJETOS")) type = "PROJETO";
+                    
+                    if (rowStr.includes("RESPONSAVEL")) {
                         if (rows[i+1]) engineer = rows[i+1][0] || rows[i+1][1] || "Importado";
                     }
 
-                    if (rowStr.includes("PERIODO DA MEDIÇÃO")) {
-                        const dateMatch = rowStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-                        if (dateMatch) {
-                            let year = dateMatch[3];
-                            if (year.length === 2) year = "20" + year;
-                            monthRef = `${year}-${dateMatch[2]}`;
+                    // Caçador de Datas (Olha na célula e nas vizinhas)
+                    row.forEach(cell => {
+                        if (cell && cell.toString().toUpperCase().includes("PERIODO")) {
+                            // Procura a data nesta célula e nas próximas 5
+                            const context = row.slice(row.indexOf(cell), row.indexOf(cell) + 5).join(' ');
+                            const dateMatch = context.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+                            if (dateMatch) {
+                                let year = dateMatch[3];
+                                if (year.length === 2) year = "20" + year;
+                                monthRef = `${year}-${dateMatch[2]}`;
+                            }
                         }
-                    }
+                    });
+
+                    // Detector de Coluna de Notas (Prioridade: Header "NOTAS" ou "0 a 10")
+                    row.forEach((cell, idx) => {
+                        if (cell && (cell.toString().toUpperCase().includes("NOTAS") || cell.toString().includes("0 a 10"))) {
+                            noteColIndex = idx;
+                        }
+                    });
                 }
+
+                // Fallback se não achar cabeçalho de notas: Usa a coluna I (Index 8) como padrão
+                if (noteColIndex === null) noteColIndex = 8;
 
                 if (!type || !monthRef) return; 
 
-                // 2. Extrair Notas da COLUNA I (Index 8)
-                // A = 0, B = 1 ... I = 8
-                const NOTE_COL_INDEX = 8; 
-
+                // 2. Extrair Notas
                 rows.forEach(row => {
-                    // Coluna B (Index 1) tem o ID (1.1, 1.2...)
                     const cellB = row[1] ? row[1].toString().trim() : ""; 
-                    
+                    // Regex para "1.1", "2.10", "4.1"
                     if (/^\d+\.\d+$/.test(cellB)) {
-                        const noteVal = row[NOTE_COL_INDEX]; // Coluna I
-                        if (noteVal && !isNaN(parseFloat(noteVal.replace(',','.')))) {
-                            scores[cellB] = parseFloat(noteVal.replace(',','.'));
+                        const noteVal = row[noteColIndex]; 
+                        if (noteVal) {
+                            // Trata "10,0", "10", "07"
+                            const cleanVal = noteVal.toString().replace(',', '.');
+                            if (!isNaN(parseFloat(cleanVal))) {
+                                scores[cellB] = parseFloat(cleanVal);
+                            }
                         }
                     }
                 });
@@ -576,7 +596,7 @@
 
                 this.saveData();
                 this.renderChart();
-                alert(`Importação Concluída (Baseada na Coluna I)!\n\n${createdCount} meses novos criados.\n${updatedCount} meses atualizados.`);
+                alert(`Importação V12 Concluída!\n\n${createdCount} meses novos.\n${updatedCount} meses atualizados.`);
             },
 
             // --- FUNÇÕES AUXILIARES ---
