@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAC System - Histórico Compartilhado</title>
+    <title>FAC System - Gestão Completa</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -18,6 +18,8 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 4px; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
 </head>
 <body class="antialiased">
@@ -31,7 +33,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">Online</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">Pro</span></h1>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full" :class="statusColor"></span>
                         <p class="text-xs text-gray-500 font-medium">{{ statusText }}</p>
@@ -40,6 +42,10 @@
             </div>
             
             <div class="flex gap-4">
+                <button @click="wipeAllData" class="text-red-400 hover:text-red-600 font-bold text-xs px-2 py-1 opacity-60 hover:opacity-100 transition-opacity" title="Apagar todo o banco de dados">
+                    Resetar Sistema
+                </button>
+
                 <button v-if="viewMode !== 'list'" @click="viewMode = 'list'" class="text-gray-500 hover:text-gray-800 font-medium px-3 text-sm">Cancelar</button>
                 <button v-if="viewMode === 'list'" @click="startNewEvaluation" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg shadow font-semibold text-sm flex items-center gap-2">
                     + Nova Medição
@@ -58,6 +64,9 @@
                         <button @click="addContract" class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100">+ Novo</button>
                     </div>
                     <ul class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
+                        <li v-if="contracts.length === 0" class="p-8 text-center text-gray-400 text-sm italic">
+                            Nenhum contrato cadastrado.
+                        </li>
                         <li v-for="contract in contracts" :key="contract.id" @click="selectContract(contract)" 
                             class="p-4 cursor-pointer hover:bg-indigo-50 border-l-4 transition-all"
                             :class="selectedContract?.id === contract.id ? 'border-indigo-600 bg-indigo-50' : 'border-transparent'">
@@ -65,18 +74,31 @@
                             <div class="text-xs text-gray-500 mt-1 uppercase">{{ contract.supplier }}</div>
                         </li>
                     </ul>
-                    <div v-if="loading" class="p-4 text-center text-xs text-gray-400 animate-pulse">Sincronizando com JSONBin...</div>
+                    <div v-if="loading" class="p-4 text-center text-xs text-gray-400 animate-pulse">Sincronizando com Nuvem...</div>
                 </div>
             </div>
 
             <div class="lg:col-span-8 space-y-6" v-if="selectedContract">
+                
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">{{ selectedContract.name }}</h2>
+                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wide">{{ selectedContract.supplier }}</p>
+                        <p class="text-xs text-gray-400 mt-2">ID: {{ selectedContract.id }}</p>
+                    </div>
+                    <button @click="deleteContract" class="text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Excluir Contrato
+                    </button>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Média Obras</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Média Geral Obras</p>
                         <p class="text-3xl font-bold text-blue-600">{{ contractAverageObra }}</p>
                     </div>
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Média Projetos</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Média Geral Projetos</p>
                         <p class="text-3xl font-bold text-purple-600">{{ contractAverageProjeto }}</p>
                     </div>
                 </div>
@@ -98,6 +120,9 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
+                            <tr v-if="sortedHistory.length === 0">
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Nenhuma medição realizada para este contrato.</td>
+                            </tr>
                             <tr v-for="eval in sortedHistory" :key="eval.id" class="hover:bg-gray-50">
                                 <td class="px-6 py-3 font-medium">{{ eval.monthRef }}</td>
                                 <td class="px-6 py-3 text-gray-600">{{ eval.engineer }}</td>
@@ -113,8 +138,14 @@
                     </table>
                 </div>
             </div>
+            
             <div v-else class="lg:col-span-8 flex items-center justify-center bg-white rounded-xl border border-dashed border-gray-300 h-96">
-                <p class="text-gray-400">Selecione um contrato para visualizar.</p>
+                <div class="text-center">
+                    <div class="bg-gray-100 rounded-full p-4 inline-block mb-3">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <p class="text-gray-500 font-medium">Selecione um contrato ao lado para gerenciar.</p>
+                </div>
             </div>
         </div>
 
@@ -241,8 +272,8 @@
 
     // --- CONFIGURAÇÃO DO JSONBIN.IO (PREENCHA AQUI) ---
     // Crie um Bin em https://jsonbin.io (com conteúdo []) e pegue os dados
-    const BIN_ID = '695d15b5ae596e708fc8e7e9';      // Ex: 65d4f3...
-    const API_KEY = '$2a$10$liiTV5DQT6G5KonVb6s4kelHDbpbUiMi4a5s63V8LYgmehkNL8hjS';     // Ex: $2a$10$XyZ... (Master Key)
+    const BIN_ID = '695d15b5ae596e708fc8e7e9';      // COLE SEU BIN ID AQUI
+    const API_KEY = '$2a$10$liiTV5DQT6G5KonVb6s4kelHDbpbUiMi4a5s63V8LYgmehkNL8hjS';     // COLE SUA MASTER KEY AQUI
 
     const ITEMS_OBRAS = [
         { id: '1.1', text: 'Equipe dimensionada e qualificada?', weight: 2, group: 'Qualidade' },
@@ -372,7 +403,6 @@
                 this.loading = true;
                 if (this.isConfigured) {
                     try {
-                        // Ler do JSONBin
                         const req = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                             headers: { 'X-Master-Key': API_KEY }
                         });
@@ -393,7 +423,6 @@
                 this.loading = true;
                 if (this.isConfigured) {
                     try {
-                        // Salvar no JSONBin
                         await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
                             method: 'PUT',
                             headers: { 
@@ -419,6 +448,55 @@
                     this.contracts.push({ id: Date.now(), name, supplier: supplier || '', history: [] });
                     this.saveData();
                 }
+            },
+
+            // --- NOVA FUNÇÃO: EXCLUIR APENAS UM CONTRATO ---
+            async deleteContract() {
+                if (!this.selectedContract) return;
+
+                const confirmMsg = `Tem certeza que deseja excluir o contrato:\n\n"${this.selectedContract.name}"?\n\nEsta ação apagará todo o histórico DESTE contrato. A ação não pode ser desfeita.`;
+                
+                if (!confirm(confirmMsg)) return;
+
+                // Segunda verificação por segurança
+                const check = prompt(`Para confirmar, digite a palavra: DELETAR`);
+                if (check !== 'DELETAR') {
+                    return alert("Ação cancelada. Palavra de confirmação incorreta.");
+                }
+
+                this.loading = true;
+
+                try {
+                    // Remove apenas o contrato selecionado da lista
+                    this.contracts = this.contracts.filter(c => c.id !== this.selectedContract.id);
+                    
+                    // Salva a nova lista no banco
+                    await this.saveData();
+
+                    // Limpa a seleção
+                    this.selectedContract = null;
+                    alert("Contrato excluído com sucesso.");
+
+                } catch (e) {
+                    console.error(e);
+                    alert("Erro ao excluir contrato.");
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            // --- FUNÇÃO RESET GLOBAL (MANTIDA MAS OPCIONAL) ---
+            async wipeAllData() {
+                if (!confirm("⚠️ PERIGO: Isso apaga TODOS os contratos e medições do sistema.\nDeseja continuar?")) return;
+                const check = prompt("Digite DELETAR para confirmar o reset total:");
+                if (check !== "DELETAR") return;
+
+                this.loading = true;
+                this.contracts = [];
+                await this.saveData();
+                this.selectedContract = null;
+                alert("Sistema resetado.");
+                this.loading = false;
             },
 
             selectContract(c) { this.selectedContract = c; this.$nextTick(() => this.renderChart()); },
@@ -524,19 +602,16 @@
                 setTimeout(() => this.renderChart(), 100);
             },
 
-            // --- GERADOR DE PDF ---
             generatePDF(evalData) {
                 const doc = new jsPDF();
                 
-                // Cabeçalho
-                doc.setFillColor(79, 70, 229); // Indigo 600
+                doc.setFillColor(79, 70, 229);
                 doc.rect(0, 0, 210, 24, 'F');
                 doc.setTextColor(255, 255, 255);
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(16);
                 doc.text("RELATÓRIO DE MEDIÇÃO MENSAL (FAC)", 14, 16);
                 
-                // Info
                 doc.setTextColor(0, 0, 0);
                 doc.setFont("helvetica", "normal");
                 doc.setFontSize(10);
@@ -547,7 +622,6 @@
 
                 let finalY = 45;
 
-                // Tabela Obra
                 if (!evalData.skippedObra) {
                     doc.setFontSize(12);
                     doc.setTextColor(37, 99, 235);
@@ -563,7 +637,6 @@
                     finalY = doc.lastAutoTable.finalY + 10;
                 }
 
-                // Tabela Projeto
                 if (!evalData.skippedProjeto) {
                     doc.setFontSize(12);
                     doc.setTextColor(147, 51, 234);
@@ -579,11 +652,10 @@
                     finalY = doc.lastAutoTable.finalY + 10;
                 }
 
-                // Justificativas
                 const justKeys = Object.keys(evalData.justifications || {});
                 if (justKeys.length > 0) {
                     doc.addPage();
-                    doc.setFillColor(245, 158, 11); // Amarelo
+                    doc.setFillColor(245, 158, 11);
                     doc.rect(0, 0, 210, 20, 'F');
                     doc.setTextColor(255, 255, 255);
                     doc.setFontSize(14);
