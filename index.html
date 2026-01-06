@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAC System V12 - Importação Blindada</title>
+    <title>FAC System V13 - Scanner Multicoluna</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -19,6 +19,8 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 4px; }
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
 </head>
 <body class="antialiased">
@@ -32,7 +34,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">V12</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">V13</span></h1>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full" :class="statusColor"></span>
                         <p class="text-xs text-gray-500 font-medium">{{ statusText }}</p>
@@ -446,7 +448,7 @@
                 alert("Contrato excluído.");
             },
 
-            // --- IMPORTAR EXCEL LEGADO (INTELIGENTE V12) ---
+            // --- IMPORTAR EXCEL LEGADO (V13 - SCANNER INTELIGENTE) ---
             importLegacyExcel(event) {
                 const files = event.target.files;
                 if (!files.length || !this.selectedContract) return;
@@ -458,7 +460,7 @@
                     Papa.parse(file, {
                         header: false,
                         skipEmptyLines: true,
-                        // DETECÇÃO AUTOMÁTICA DE SEPARADOR (Vírgula ou Ponto-e-Vírgula)
+                        // Permite detecção automática de delimitador (Brasil ; ou EUA ,)
                         delimiter: "", 
                         complete: (results) => {
                             this.parseRawSheet(results.data, groupedByMonth);
@@ -479,7 +481,7 @@
                 let scores = {};
                 let noteColIndex = null;
 
-                // 1. Detectar Cabeçalhos e Coluna de Notas
+                // 1. Detectar Cabeçalhos, Data, Engenheiro e Coluna de Notas
                 for (let i = 0; i < Math.min(rows.length, 25); i++) {
                     const row = rows[i];
                     const rowStr = row.join(' ').toUpperCase();
@@ -491,9 +493,9 @@
                         if (rows[i+1]) engineer = rows[i+1][0] || rows[i+1][1] || "Importado";
                     }
 
-                    // Caçador de Datas (Olha na célula e nas vizinhas)
+                    // Caçador de Datas (Compatível com PERÍODO com acento e sem acento)
                     row.forEach(cell => {
-                        if (cell && cell.toString().toUpperCase().includes("PERIODO")) {
+                        if (cell && (cell.toString().toUpperCase().includes("PERIODO") || cell.toString().toUpperCase().includes("PERÍODO"))) {
                             // Procura a data nesta célula e nas próximas 5
                             const context = row.slice(row.indexOf(cell), row.indexOf(cell) + 5).join(' ');
                             const dateMatch = context.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
@@ -513,22 +515,32 @@
                     });
                 }
 
-                // Fallback se não achar cabeçalho de notas: Usa a coluna I (Index 8) como padrão
+                // Fallback de coluna de notas (I = index 8)
                 if (noteColIndex === null) noteColIndex = 8;
 
                 if (!type || !monthRef) return; 
 
-                // 2. Extrair Notas
+                // 2. Extrair Notas - SCANNER MULTICOLUNA (Colunas A, B, C)
+                // A tabela pode estar deslocada. Vamos procurar o padrão X.X nas 3 primeiras colunas.
                 rows.forEach(row => {
-                    const cellB = row[1] ? row[1].toString().trim() : ""; 
-                    // Regex para "1.1", "2.10", "4.1"
-                    if (/^\d+\.\d+$/.test(cellB)) {
+                    let cellID = null;
+                    
+                    // Tenta achar ID na coluna A (0), B (1) ou C (2)
+                    for (let c = 0; c <= 2; c++) {
+                        const cellVal = row[c] ? row[c].toString().trim() : "";
+                        if (/^\d+\.\d+$/.test(cellVal)) { // Regex estrito: começa e termina com digito.digito
+                            cellID = cellVal;
+                            break; // Achou!
+                        }
+                    }
+
+                    if (cellID) {
                         const noteVal = row[noteColIndex]; 
                         if (noteVal) {
                             // Trata "10,0", "10", "07"
                             const cleanVal = noteVal.toString().replace(',', '.');
                             if (!isNaN(parseFloat(cleanVal))) {
-                                scores[cellB] = parseFloat(cleanVal);
+                                scores[cellID] = parseFloat(cleanVal);
                             }
                         }
                     }
@@ -596,7 +608,7 @@
 
                 this.saveData();
                 this.renderChart();
-                alert(`Importação V12 Concluída!\n\n${createdCount} meses novos.\n${updatedCount} meses atualizados.`);
+                alert(`Importação Concluída!\n\n${createdCount} meses novos.\n${updatedCount} meses atualizados.`);
             },
 
             // --- FUNÇÕES AUXILIARES ---
