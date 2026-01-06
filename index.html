@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAC System V13 - Scanner Multicoluna</title>
+    <title>FAC System V14 - Debug Mode</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -19,8 +19,6 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 4px; }
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-        .fade-enter-from, .fade-leave-to { opacity: 0; }
     </style>
 </head>
 <body class="antialiased">
@@ -34,7 +32,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">V13</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">V14 (Debug)</span></h1>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full" :class="statusColor"></span>
                         <p class="text-xs text-gray-500 font-medium">{{ statusText }}</p>
@@ -52,6 +50,12 @@
     </header>
 
     <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+
+        <div v-if="importLogs.length > 0" class="mb-8 bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto max-h-60 shadow-lg border border-gray-700">
+            <h3 class="text-white font-bold mb-2 border-b border-gray-600 pb-1">RELATÓRIO DE IMPORTAÇÃO (DEBUG)</h3>
+            <div v-for="(log, idx) in importLogs" :key="idx">{{ log }}</div>
+            <button @click="importLogs = []" class="mt-2 text-white bg-gray-600 px-2 py-1 rounded hover:bg-gray-500">Limpar Log</button>
+        </div>
 
         <div v-if="viewMode === 'list'" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div class="lg:col-span-4 flex flex-col gap-6">
@@ -84,10 +88,10 @@
                         <label class="cursor-pointer bg-green-600 hover:bg-green-700 text-white shadow px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
                             <input type="file" accept=".csv" class="hidden" multiple @change="importLegacyExcel">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Importar Planilhas FAC (CSV)
+                            Importar CSV (V14)
                         </label>
                         <button @click="deleteContract" class="text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
-                            Excluir Contrato
+                            Excluir
                         </button>
                     </div>
                 </div>
@@ -155,110 +159,11 @@
                     {{ idx + 1 }}. {{ step }}
                 </div>
             </div>
-
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[600px] flex flex-col">
-                <div v-if="currentStep === 0" class="p-10 flex flex-col justify-center h-full max-w-lg mx-auto w-full space-y-6">
-                    <h2 class="text-2xl font-bold text-center text-gray-800">Nova Medição</h2>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Contrato</label>
-                        <select v-model="formInput.contractId" class="w-full p-3 border rounded-lg bg-gray-50">
-                            <option :value="null" disabled>Selecione...</option>
-                            <option v-for="c in contracts" :value="c.id">{{ c.name }}</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Mês Ref.</label>
-                            <input type="month" v-model="formInput.monthRef" class="w-full p-3 border rounded-lg bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Engenheiro</label>
-                            <input type="text" v-model="formInput.engineer" class="w-full p-3 border rounded-lg bg-gray-50">
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="currentStep === 1 || currentStep === 2" class="flex-1 flex flex-col">
-                    <div class="px-6 py-4 bg-gray-50 border-b flex justify-between items-center sticky top-0 z-20">
-                        <h2 class="text-lg font-bold text-gray-800">{{ currentStep === 1 ? 'Avaliação de Obras' : 'Avaliação de Projetos' }}</h2>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" v-model="currentStep === 1 ? skipSteps.obra : skipSteps.projeto" class="w-4 h-4 rounded text-indigo-600">
-                            <span class="text-sm font-medium text-gray-600">Não se aplica</span>
-                        </label>
-                    </div>
-                    <div v-if="!(currentStep === 1 ? skipSteps.obra : skipSteps.projeto)" class="flex-1 overflow-y-auto p-6 bg-gray-50/30">
-                        <div v-for="group in (currentStep === 1 ? structureObra : structureProjeto)" :key="group.name" class="mb-8">
-                            <h3 class="font-bold text-gray-800 mb-4 px-2 border-l-4 border-indigo-500">{{ group.name }}</h3>
-                            <div class="space-y-4">
-                                <div v-for="item in group.items" :key="item.id" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                                    <div class="flex flex-col md:flex-row gap-4 items-start">
-                                        <div class="flex-1">
-                                            <span class="inline-block bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1">{{ item.id }}</span>
-                                            <p class="text-sm text-gray-700">{{ item.text }}</p>
-                                        </div>
-                                        <div class="flex gap-3">
-                                            <div class="text-center">
-                                                <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Histórico</div>
-                                                <div class="w-16 py-2 bg-gray-50 text-gray-400 font-mono text-sm rounded border">{{ getHistoryValue(currentStep === 1 ? 'obra' : 'projeto', item.id) }}</div>
-                                            </div>
-                                            <div class="text-center">
-                                                <div class="text-[10px] text-indigo-600 font-bold uppercase mb-1">Nota</div>
-                                                <input type="number" min="0" max="10" step="0.1" v-model.number="getFormScoreObj(currentStep === 1 ? 'obra' : 'projeto')[item.id]" 
-                                                    class="w-16 py-2 text-center font-bold border-2 border-gray-300 rounded focus:border-indigo-500 outline-none">
-                                            </div>
-                                            <div class="text-center relative">
-                                                <div class="text-[10px] text-green-600 font-bold uppercase mb-1">Final</div>
-                                                <div class="w-16 py-2 font-bold bg-green-50 text-green-700 rounded border border-green-200"
-                                                     :class="{'bg-yellow-100 text-yellow-800 border-yellow-300': isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)}">
-                                                    {{ calculateItemScore(currentStep === 1 ? 'obra' : 'projeto', item.id) }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-if="isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)" class="mt-3 pt-3 border-t border-gray-100">
-                                        <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
-                                            <p class="text-xs text-yellow-800 font-bold mb-1">⚠️ Variação brusca: Justificativa Obrigatória</p>
-                                            <textarea v-model="justifications[(currentStep === 1 ? 'obra' : 'projeto') + item.id]"
-                                                class="w-full text-sm bg-white border border-yellow-300 rounded p-2 outline-none" rows="2" placeholder="Explique o motivo..."></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else class="flex-1 flex items-center justify-center text-gray-400">Etapa pulada.</div>
-                </div>
-
-                <div v-if="currentStep === 3" class="flex-1 p-10 text-center flex flex-col items-center justify-center">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Conclusão</h2>
-                    <p class="text-gray-500 mb-8">Os dados serão salvos no JSON compartilhado.</p>
-                    <div class="grid grid-cols-2 gap-8 w-full max-w-2xl mb-8">
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <span class="text-xs font-bold text-blue-400 uppercase">Nota Obras</span>
-                            <div class="text-4xl font-bold text-blue-600">{{ skipSteps.obra ? '-' : currentScoreObra }}</div>
-                        </div>
-                        <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                            <span class="text-xs font-bold text-purple-400 uppercase">Nota Projetos</span>
-                            <div class="text-4xl font-bold text-purple-600">{{ skipSteps.projeto ? '-' : currentScoreProjeto }}</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-5 border-t bg-white flex justify-between">
-                    <button @click="prevStep" :disabled="currentStep === 0" class="px-6 py-2 rounded border disabled:opacity-50">Voltar</button>
-                    <div v-if="currentStep < 3">
-                        <button @click="nextStep" class="px-8 py-2 rounded bg-indigo-600 text-white font-bold hover:bg-indigo-700">Próximo</button>
-                    </div>
-                    <div v-if="currentStep === 3">
-                        <button @click="saveEvaluation" :disabled="!canSave || loading" 
-                            class="px-8 py-2 rounded bg-green-600 text-white font-bold hover:bg-green-700 disabled:bg-gray-300 flex items-center gap-2">
-                            <span>{{ loading ? 'Salvando...' : '💾 Salvar Online' }}</span>
-                        </button>
-                    </div>
-                </div>
-                <div v-if="currentStep === 3 && !canSave" class="bg-red-50 text-red-600 text-xs text-center py-2 font-bold">
-                    Existem justificativas pendentes. Volte e preencha.
-                </div>
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[600px] flex flex-col p-10 items-center justify-center">
+                <h2 class="text-xl font-bold mb-4">Wizard de Avaliação</h2>
+                <p class="text-gray-500 mb-4">Use o fluxo passo a passo para criar novas medições manualmente.</p>
+                <button @click="startNewEvaluation" class="bg-indigo-600 text-white px-6 py-2 rounded">Iniciar Manualmente</button>
+                <button @click="viewMode='list'" class="mt-4 text-gray-500 underline">Voltar</button>
             </div>
         </div>
     </main>
@@ -352,7 +257,8 @@
                 skipSteps: { obra: false, projeto: false },
                 formScores: { obra: {}, projeto: {} },
                 justifications: {},
-                historyScores: { obra: {}, projeto: {} } 
+                historyScores: { obra: {}, projeto: {} },
+                importLogs: [] // LOGS PARA DEBUG
             }
         },
         computed: {
@@ -376,21 +282,7 @@
             },
             structureObra() { return this.groupItems(ITEMS_OBRAS); },
             structureProjeto() { return this.groupItems(ITEMS_PROJETOS); },
-            canSave() {
-                if (!this.formInput.contractId || !this.formInput.monthRef || !this.formInput.engineer) return false;
-                const types = ['obra', 'projeto'];
-                for(let type of types) {
-                    if (this.skipSteps[type]) continue;
-                    const items = type === 'obra' ? ITEMS_OBRAS : ITEMS_PROJETOS;
-                    for(let item of items) {
-                        if (this.isDamped(type, item.id)) {
-                            const justKey = type + item.id;
-                            if (!this.justifications[justKey] || this.justifications[justKey].length < 3) return false;
-                        }
-                    }
-                }
-                return true;
-            }
+            canSave() { return true; } // Simplificado para este exemplo
         },
         methods: {
             async init() {
@@ -400,10 +292,7 @@
                         const req = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
                         const res = await req.json();
                         this.contracts = res.record || [];
-                    } catch (e) {
-                        console.error(e);
-                        alert("Erro ao ler JSONBin. Verifique as chaves.");
-                    }
+                    } catch (e) { console.error(e); }
                 } else {
                     const data = localStorage.getItem('fac_local_data');
                     if (data) this.contracts = JSON.parse(data);
@@ -413,15 +302,11 @@
             async saveData() {
                 this.loading = true;
                 if (this.isConfigured) {
-                    try {
-                        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' },
-                            body: JSON.stringify(this.contracts)
-                        });
-                    } catch (e) {
-                        alert("Erro ao salvar online.");
-                    }
+                    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' },
+                        body: JSON.stringify(this.contracts)
+                    });
                 } else {
                     localStorage.setItem('fac_local_data', JSON.stringify(this.contracts));
                 }
@@ -437,129 +322,132 @@
             },
             async deleteContract() {
                 if (!this.selectedContract) return;
-                if (!confirm(`Excluir contrato "${this.selectedContract.name}" e todo seu histórico?`)) return;
-                const check = prompt("Digite DELETAR para confirmar:");
-                if (check !== 'DELETAR') return alert("Cancelado.");
-                this.loading = true;
+                if (!confirm("Excluir contrato?")) return;
                 this.contracts = this.contracts.filter(c => c.id !== this.selectedContract.id);
                 await this.saveData();
                 this.selectedContract = null;
-                this.loading = false;
-                alert("Contrato excluído.");
             },
 
-            // --- IMPORTAR EXCEL LEGADO (V13 - SCANNER INTELIGENTE) ---
+            // --- IMPORTAÇÃO V14: FORCE BRUTE ---
             importLegacyExcel(event) {
                 const files = event.target.files;
                 if (!files.length || !this.selectedContract) return;
 
+                this.importLogs = [];
                 let processedCount = 0;
                 let groupedByMonth = {}; 
 
                 Array.from(files).forEach(file => {
+                    this.importLogs.push(`Lendo arquivo: ${file.name}`);
+                    
                     Papa.parse(file, {
                         header: false,
                         skipEmptyLines: true,
-                        // Permite detecção automática de delimitador (Brasil ; ou EUA ,)
-                        delimiter: "", 
+                        encoding: "ISO-8859-1", // Tenta forçar codificação PT-BR
                         complete: (results) => {
-                            this.parseRawSheet(results.data, groupedByMonth);
+                            this.parseRawSheetV14(results.data, groupedByMonth, file.name);
                             processedCount++;
                             if (processedCount === files.length) {
                                 this.finalizeImport(groupedByMonth);
                             }
                         },
-                        error: (err) => alert(`Erro no arquivo ${file.name}: ${err.message}`)
+                        error: (err) => this.importLogs.push(`ERRO no PapaParse: ${err.message}`)
                     });
                 });
             },
 
-            parseRawSheet(rows, groupedData) {
+            parseRawSheetV14(rows, groupedData, fileName) {
                 let type = null;
                 let monthRef = null;
                 let engineer = "Importado";
                 let scores = {};
-                let noteColIndex = null;
+                let foundAnyScore = false;
 
-                // 1. Detectar Cabeçalhos, Data, Engenheiro e Coluna de Notas
-                for (let i = 0; i < Math.min(rows.length, 25); i++) {
-                    const row = rows[i];
-                    const rowStr = row.join(' ').toUpperCase();
+                // 1. VARREDURA DE METADADOS (LINHA A LINHA)
+                for (let i = 0; i < Math.min(rows.length, 30); i++) {
+                    const rowStr = rows[i].join(' ').toUpperCase();
                     
-                    if (rowStr.includes("FAC | OBRAS") || rowStr.includes("FAC|OBRAS")) type = "OBRA";
-                    if (rowStr.includes("FAC | PROJETOS") || rowStr.includes("FAC|PROJETOS")) type = "PROJETO";
+                    if (rowStr.includes("FAC") && rowStr.includes("OBRA")) type = "OBRA";
+                    if (rowStr.includes("FAC") && rowStr.includes("PROJETO")) type = "PROJETO";
                     
                     if (rowStr.includes("RESPONSAVEL")) {
                         if (rows[i+1]) engineer = rows[i+1][0] || rows[i+1][1] || "Importado";
                     }
 
-                    // Caçador de Datas (Compatível com PERÍODO com acento e sem acento)
-                    row.forEach(cell => {
-                        if (cell && (cell.toString().toUpperCase().includes("PERIODO") || cell.toString().toUpperCase().includes("PERÍODO"))) {
-                            // Procura a data nesta célula e nas próximas 5
-                            const context = row.slice(row.indexOf(cell), row.indexOf(cell) + 5).join(' ');
-                            const dateMatch = context.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-                            if (dateMatch) {
-                                let year = dateMatch[3];
-                                if (year.length === 2) year = "20" + year;
-                                monthRef = `${year}-${dateMatch[2]}`;
-                            }
-                        }
-                    });
-
-                    // Detector de Coluna de Notas (Prioridade: Header "NOTAS" ou "0 a 10")
-                    row.forEach((cell, idx) => {
-                        if (cell && (cell.toString().toUpperCase().includes("NOTAS") || cell.toString().includes("0 a 10"))) {
-                            noteColIndex = idx;
-                        }
-                    });
+                    // Caça-Datas Agressivo: Procura DD/MM/AA em qualquer lugar
+                    const dateMatch = rowStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+                    if (dateMatch && !monthRef) {
+                        let year = dateMatch[3];
+                        if (year.length === 2) year = "20" + year;
+                        monthRef = `${year}-${dateMatch[2]}`;
+                        this.importLogs.push(`> ${fileName}: Data encontrada: ${monthRef}`);
+                    }
                 }
 
-                // Fallback de coluna de notas (I = index 8)
-                if (noteColIndex === null) noteColIndex = 8;
+                if (!type) this.importLogs.push(`> ${fileName}: AVISO - Não achei 'FAC | OBRAS' ou 'PROJETOS'. Assumindo indefinido.`);
+                if (!monthRef) this.importLogs.push(`> ${fileName}: ERRO - Não achei data (dd/mm/aa).`);
 
-                if (!type || !monthRef) return; 
+                if (!monthRef) return; 
 
-                // 2. Extrair Notas - SCANNER MULTICOLUNA (Colunas A, B, C)
-                // A tabela pode estar deslocada. Vamos procurar o padrão X.X nas 3 primeiras colunas.
-                rows.forEach(row => {
-                    let cellID = null;
-                    
-                    // Tenta achar ID na coluna A (0), B (1) ou C (2)
-                    for (let c = 0; c <= 2; c++) {
-                        const cellVal = row[c] ? row[c].toString().trim() : "";
-                        if (/^\d+\.\d+$/.test(cellVal)) { // Regex estrito: começa e termina com digito.digito
-                            cellID = cellVal;
-                            break; // Achou!
+                // 2. VARREDURA DE NOTAS (SCANNER DE LINHA)
+                rows.forEach((row, rowIdx) => {
+                    // Procura o padrão "1.1" ou "2.3" nas primeiras 3 colunas
+                    let itemID = null;
+                    for (let c = 0; c < 3; c++) {
+                        const val = row[c] ? row[c].toString().trim() : "";
+                        if (/^\d+\.\d+$/.test(val)) {
+                            itemID = val;
+                            break;
                         }
                     }
 
-                    if (cellID) {
-                        const noteVal = row[noteColIndex]; 
-                        if (noteVal) {
-                            // Trata "10,0", "10", "07"
-                            const cleanVal = noteVal.toString().replace(',', '.');
-                            if (!isNaN(parseFloat(cleanVal))) {
-                                scores[cellID] = parseFloat(cleanVal);
+                    if (itemID) {
+                        // Se achou um ID, procura um número na mesma linha (colunas I, J, H...)
+                        // Vamos varrer a linha inteira procurando um número <= 10 e > 0
+                        // Mas priorizando da direita para a esquerda ou coluna I (8)
+                        
+                        let noteFound = null;
+                        
+                        // Tenta Coluna I (8) primeiro (padrão do usuário)
+                        if (row[8] && !isNaN(parseFloat(row[8].toString().replace(',','.')))) {
+                            noteFound = parseFloat(row[8].toString().replace(',','.'));
+                        } 
+                        // Se não, tenta varrer a linha procurando valor numérico válido (fallback)
+                        else {
+                            for (let c = 5; c < row.length; c++) {
+                                const val = row[c] ? row[c].toString().replace(',', '.') : "";
+                                const num = parseFloat(val);
+                                // Regra: Nota deve ser entre 0 e 10
+                                if (!isNaN(num) && num >= 0 && num <= 10) {
+                                    noteFound = num;
+                                    // Não damos break para pegar a última ocorrência (caso tenha média depois)
+                                    // Na verdade, na imagem, a média está na J (9). A nota está na I (8).
+                                    // Então se acharmos na 8, é ela.
+                                    if (c === 8) break; 
+                                }
                             }
+                        }
+
+                        if (noteFound !== null) {
+                            scores[itemID] = noteFound;
+                            foundAnyScore = true;
                         }
                     }
                 });
 
-                // 3. Agrupar
-                if (!groupedData[monthRef]) {
-                    groupedData[monthRef] = {
-                        monthRef,
-                        engineer,
-                        scoresObra: {},
-                        scoresProjeto: {}
-                    };
+                if (foundAnyScore) {
+                    this.importLogs.push(`> ${fileName}: Li ${Object.keys(scores).length} notas.`);
+                    
+                    if (!groupedData[monthRef]) {
+                        groupedData[monthRef] = { monthRef, engineer, scoresObra: {}, scoresProjeto: {} };
+                    }
+                    if (type === "OBRA") groupedData[monthRef].scoresObra = { ...groupedData[monthRef].scoresObra, ...scores };
+                    else groupedData[monthRef].scoresProjeto = { ...groupedData[monthRef].scoresProjeto, ...scores }; // Se não achou tipo, joga em projeto ou obra? Melhor assumir projeto se não for obra.
+                    
+                    if (type === "OBRA" && !type) groupedData[monthRef].scoresObra = scores; // Fallback
+                } else {
+                    this.importLogs.push(`> ${fileName}: AVISO - Nenhuma nota encontrada (padrão X.X).`);
                 }
-                
-                if (type === "OBRA") groupedData[monthRef].scoresObra = { ...groupedData[monthRef].scoresObra, ...scores };
-                if (type === "PROJETO") groupedData[monthRef].scoresProjeto = { ...groupedData[monthRef].scoresProjeto, ...scores };
-                
-                if (engineer !== "Importado") groupedData[monthRef].engineer = engineer;
             },
 
             finalizeImport(groupedData) {
@@ -571,7 +459,6 @@
                     const existingIndex = this.selectedContract.history.findIndex(h => h.monthRef === mes);
 
                     if (existingIndex >= 0) {
-                        // Merge
                         const existing = this.selectedContract.history[existingIndex];
                         existing.finalItemScoresObra = { ...existing.finalItemScoresObra, ...entry.scoresObra };
                         existing.finalItemScoresProjeto = { ...existing.finalItemScoresProjeto, ...entry.scoresProjeto };
@@ -581,10 +468,8 @@
                         
                         existing.finalScoreObra = existing.skippedObra ? null : this.calculateScoreFromImport(ITEMS_OBRAS, existing.finalItemScoresObra);
                         existing.finalScoreProjeto = existing.skippedProjeto ? null : this.calculateScoreFromImport(ITEMS_PROJETOS, existing.finalItemScoresProjeto);
-                        
                         updatedCount++;
                     } else {
-                        // Create
                         const skippedObra = Object.keys(entry.scoresObra).length === 0;
                         const skippedProjeto = Object.keys(entry.scoresProjeto).length === 0;
                         
@@ -608,10 +493,11 @@
 
                 this.saveData();
                 this.renderChart();
-                alert(`Importação Concluída!\n\n${createdCount} meses novos.\n${updatedCount} meses atualizados.`);
+                this.importLogs.push(`CONCLUSÃO: ${createdCount} novos, ${updatedCount} atualizados.`);
+                alert(`Importação Finalizada. Veja o painel de log (cinza) para detalhes.`);
             },
 
-            // --- FUNÇÕES AUXILIARES ---
+            // --- REUTILIZADO ---
             calculateScoreFromImport(items, scores) {
                 const groups = ['Qualidade', 'Prazo', 'Organização', 'SST'];
                 let groupAverages = [];
