@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAC System V18 - Correção Histórico</title>
+    <title>FAC System V20 - Média Histórica Global</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -32,7 +32,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-blue-600">V18</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-blue-600">V20</span></h1>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full" :class="statusColor"></span>
                         <p class="text-xs text-gray-500 font-medium">{{ statusText }}</p>
@@ -53,7 +53,7 @@
 
         <div v-if="importLogs.length > 0" class="mb-8 bg-gray-900 text-green-400 p-6 rounded-xl font-mono text-xs overflow-x-auto max-h-96 shadow-xl border border-gray-700">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                <h3 class="text-white font-bold text-sm">LOG DO SISTEMA</h3>
+                <h3 class="text-white font-bold text-sm">LOG DE IMPORTAÇÃO</h3>
                 <button @click="importLogs = []" class="text-gray-400 hover:text-white underline">Limpar</button>
             </div>
             <div v-for="(log, idx) in importLogs" :key="idx" class="mb-1 border-b border-gray-800 pb-1 last:border-0">{{ log }}</div>
@@ -199,15 +199,15 @@
                                         </div>
                                         <div class="flex gap-3 items-end">
                                             <div class="text-center">
-                                                <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Histórico</div>
-                                                <div class="w-16 py-2 bg-gray-50 text-gray-600 font-mono text-sm rounded border font-bold">{{ getHistoryValue(currentStep === 1 ? 'obra' : 'projeto', item.id) }}</div>
+                                                <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Média Hist.</div>
+                                                <div class="w-16 py-2 bg-gray-50 text-gray-600 font-mono text-sm rounded border font-bold" title="Média de todas as medições anteriores">{{ getHistoryValue(currentStep === 1 ? 'obra' : 'projeto', item.id) }}</div>
                                             </div>
                                             <div class="text-center">
                                                 <div class="text-[10px] text-blue-600 font-bold uppercase mb-1">Nota</div>
                                                 <input type="number" min="0" max="10" step="0.1" v-model.number="getFormScoreObj(currentStep === 1 ? 'obra' : 'projeto')[item.id]" 
                                                     class="w-16 py-2 text-center font-bold border-2 border-gray-300 rounded focus:border-blue-500 outline-none">
                                             </div>
-                                            <div class="text-center">
+                                            <div class="text-center relative">
                                                 <div class="text-[10px] text-green-600 font-bold uppercase mb-1">Final</div>
                                                 <div class="w-16 py-2 font-bold bg-green-50 text-green-700 rounded border border-green-200"
                                                      :class="{'bg-yellow-100 text-yellow-800 border-yellow-300': isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)}">
@@ -218,7 +218,7 @@
                                     </div>
                                     <div v-if="isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)" class="mt-3 pt-3 border-t border-gray-100">
                                         <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
-                                            <p class="text-xs text-yellow-800 font-bold mb-1">Justificativa Obrigatória</p>
+                                            <p class="text-xs text-yellow-800 font-bold mb-1">⚠️ Nota muito distante da Média Histórica. Justifique:</p>
                                             <textarea v-model="justifications[(currentStep === 1 ? 'obra' : 'projeto') + item.id]" class="w-full text-sm bg-white border border-yellow-300 rounded p-2 outline-none"></textarea>
                                         </div>
                                     </div>
@@ -255,7 +255,7 @@
                     </div>
                 </div>
                 <div v-if="currentStep === 3 && !canSave" class="bg-red-50 text-red-600 text-xs text-center py-2 font-bold border-t border-red-100">
-                    Justifique as variações bruscas antes de salvar.
+                    Preencha as justificativas.
                 </div>
             </div>
         </div>
@@ -269,72 +269,9 @@
     const BIN_ID = '695d15b5ae596e708fc8e7e9';      // SEU BIN ID
     const API_KEY = '$2a$10$liiTV5DQT6G5KonVb6s4kelHDbpbUiMi4a5s63V8LYgmehkNL8hjS';     // SUA MASTER KEY
 
-    const ITEMS_OBRAS = [
-        { id: '1.1', text: 'A contratada apresenta equipe dimensionada, qualificada, com conhecimento e habilidade para execução dos serviços? Com desempenho em conformidade com os padrões técnicos de exigências da Sabesp?', weight: 2, group: 'Qualidade' },
-        { id: '1.2', text: 'A contratada efetua a gestão de mão de obra de forma: a contratar profissionais de maneira ágil, manter uma baixa rotatividade e distribuir as atividades para otimizar os recursos humanos disponíveis?', weight: 2, group: 'Qualidade' },
-        { id: '1.3', text: 'A contratada está atendendo às Especificações Técnicas e com os padrões de qualidade determinados pela Sabesp?', weight: 2, group: 'Qualidade' },
-        { id: '1.4', text: 'As solicitações da Sabesp e dos órgãos públicos estão sendo atendidas conforme recomendado? Nos prazos estabelecidos e acordados?', weight: 1, group: 'Qualidade' },
-        { id: '1.5', text: 'A contratada teve postura pró-ativa necessária na realização da Obra e Serviços (tomando ações corretivas e preventivas)?', weight: 1, group: 'Qualidade' },
-        { id: '1.6', text: 'Os materiais/equipamentos fornecidos estão em conformidade com as especificações técnicas?', weight: 1, group: 'Qualidade' },
-        { id: '1.7', text: 'Estão sendo tomados os devidos cuidados no sentido de evitar reclamações do cliente/público em geral? A conduta é respeitosa?', weight: 1, group: 'Qualidade' },
-        { id: '1.8', text: 'A contratada está atendendo as exigências legais em relação as demandas ambientais?', weight: 1, group: 'Qualidade' },
-        { id: '2.1', text: 'A contratada apresentou previamente as ações de planejamento revisadas e atende ao cronograma acordado?', weight: 1, group: 'Prazo' },
-        { id: '2.2', text: 'A contratada está realizando formalmente a inspeção dos imóveis em torno das obras, com relatório fotográfico?', weight: 1, group: 'Prazo' },
-        { id: '2.3', text: 'A contratada atende as necessidades da Sabesp quanto aos prazos requeridos de documentação (Lei Leiva, laudos, etc)?', weight: 2, group: 'Prazo' },
-        { id: '2.4', text: 'A contratada está atendendo a Fiscalização quanto a entrega parcial ou definitiva dos serviços?', weight: 2, group: 'Prazo' },
-        { id: '2.5', text: 'A contratada está fornecendo os materiais/equipamentos nos prazos estabelecidos?', weight: 1, group: 'Prazo' },
-        { id: '2.6', text: 'A contratada está atendendo os procedimentos e requisitos quanto ao balanço dos materiais?', weight: 1, group: 'Prazo' },
-        { id: '2.7', text: 'A contratada está entregando a documentação contratual (relatório de acidentes, notas fiscais, encargos, ARTs)?', weight: 2, group: 'Prazo' },
-        { id: '3.1', text: 'Toda a mão de obra efetiva possui Carteira de Trabalho registrada?', weight: 2, group: 'Organização' },
-        { id: '3.2', text: 'A contratada tem cumprido as obrigações trabalhistas (salários, benefícios, encargos)?', weight: 2, group: 'Organização' },
-        { id: '3.3', text: 'A contratada toma ações preventivas e corretivas eliminando falhas identificadas na sua administração?', weight: 1, group: 'Organização' },
-        { id: '3.4', text: 'Todos os empregados estão uniformizados e com crachá em local visível?', weight: 1, group: 'Organização' },
-        { id: '3.5', text: 'Os veículos utilizados pela contratada estão identificados de forma adequada?', weight: 1, group: 'Organização' },
-        { id: '3.6', text: 'A contratada disponibiliza instalações e equipamentos em boas condições de uso?', weight: 1, group: 'Organização' },
-        { id: '4.1', text: 'A contratada atende aos procedimentos legais de segurança e saúde do trabalho?', weight: 2, group: 'SST' },
-        { id: '4.2', text: 'A contratada elaborou a Análise Preliminar de Risco (APR) e disponibiliza aos seus empregados?', weight: 1, group: 'SST' },
-        { id: '4.3', text: 'Possui água potável e copo descartável nas frentes de serviços?', weight: 2, group: 'SST' },
-        { id: '4.4', text: 'Banheiros possuem piso impermeável, papel higiênico, privacidade e lavatório?', weight: 3, group: 'SST' },
-        { id: '4.5', text: 'Local adequado e higienizado para as refeições?', weight: 1, group: 'SST' },
-        { id: '4.6', text: 'Vestiário dimensionado, com chuveiro aterrado e armário individual?', weight: 1, group: 'SST' },
-        { id: '4.7', text: 'Segue as normas de segurança para soldagem, cortes e revestimentos?', weight: 1, group: 'SST' },
-        { id: '4.8', text: 'Segue as normas de segurança para atividades com eletricidade (NR-10)?', weight: 1, group: 'SST' },
-        { id: '4.9', text: 'Segue as normas de segurança para escavação e escoramento de valas?', weight: 1, group: 'SST' },
-        { id: '4.10', text: 'Segue as normas de segurança para atividades em espaços confinados (NR-33)?', weight: 1, group: 'SST' },
-        { id: '4.11', text: 'Mantem as áreas de circulação livres e limpas?', weight: 1, group: 'SST' },
-        { id: '4.12', text: 'Realiza transporte e manuseio adequado de produtos químicos?', weight: 1, group: 'SST' },
-        { id: '4.13', text: 'Segue as normas de segurança para trabalho em altura (NR-35)?', weight: 1, group: 'SST' },
-        { id: '4.14', text: 'Veículos e máquinas adequados, com laudos e inspeção rotineira?', weight: 1, group: 'SST' },
-        { id: '4.15', text: 'Empregados utilizam EPIs adequados e com CA?', weight: 1, group: 'SST' },
-        { id: '4.16', text: 'Empregados utilizam EPCs adequados?', weight: 1, group: 'SST' },
-        { id: '4.17', text: 'Empregados conhecem e aplicam os assuntos do DDS?', weight: 1, group: 'SST' }
-    ];
-
-    const ITEMS_PROJETOS = [
-        { id: '1.1', text: 'A contratada apresenta equipe dimensionada, qualificada e com habilidade para execução dos serviços?', weight: 2, group: 'Qualidade' },
-        { id: '1.2', text: 'A contratada efetua a gestão de mão de obra de forma ágil e com baixa rotatividade?', weight: 2, group: 'Qualidade' },
-        { id: '1.3', text: 'Os produtos (laudos, relatórios, projetos) estão em conformidade com as necessidades da Sabesp e TR?', weight: 2, group: 'Qualidade' },
-        { id: '1.4', text: 'A contratada está atendendo às Especificações Técnicas/Proposta Técnica?', weight: 1, group: 'Qualidade' },
-        { id: '1.5', text: 'As solicitações da Sabesp e órgãos públicos estão sendo atendidas nos prazos?', weight: 1, group: 'Qualidade' },
-        { id: '1.6', text: 'A contratada teve postura pró-ativa (ações corretivas/preventivas)?', weight: 1, group: 'Qualidade' },
-        { id: '1.7', text: 'A contratada está especificando MATERIAIS conforme normas da Sabesp?', weight: 1, group: 'Qualidade' },
-        { id: '1.8', text: 'A contratada está realizando o projeto de acordo com exigências legais ambientais?', weight: 1, group: 'Qualidade' },
-        { id: '2.1', text: 'A contratada apresentou planejamento revisado e atende ao cronograma?', weight: 1, group: 'Prazo' },
-        { id: '2.2', text: 'Atende prazos de termos, laudos e relatórios?', weight: 1, group: 'Prazo' },
-        { id: '2.3', text: 'Atende a Fiscalização quanto a entrega parcial ou definitiva?', weight: 2, group: 'Prazo' },
-        { id: '2.4', text: 'Entrega a documentação contratual (ARTs, notas fiscais, etc)?', weight: 2, group: 'Prazo' },
-        { id: '3.1', text: 'Mão de obra possui Carteira de Trabalho registrada?', weight: 2, group: 'Organização' },
-        { id: '3.2', text: 'Cumpre obrigações trabalhistas (salários, benefícios)?', weight: 2, group: 'Organização' },
-        { id: '3.3', text: 'Toma ações preventivas e corretivas na administração?', weight: 1, group: 'Organização' },
-        { id: '3.4', text: 'Empregados uniformizados e com crachá?', weight: 1, group: 'Organização' },
-        { id: '3.5', text: 'Veículos identificados de forma adequada?', weight: 1, group: 'Organização' },
-        { id: '3.6', text: 'Disponibiliza instalações e equipamentos em boas condições?', weight: 1, group: 'Organização' },
-        { id: '3.7', text: 'Conduta satisfatória com clientes e órgãos públicos?', weight: 1, group: 'Organização' },
-        { id: '4.1', text: 'Atende aos procedimentos legais de SST?', weight: 2, group: 'SST' },
-        { id: '4.2', text: 'Empregados utilizam EPIs adequados e com CA?', weight: 1, group: 'SST' },
-        { id: '4.3', text: 'Empregados utilizam EPCs adequados?', weight: 2, group: 'SST' },
-        { id: '4.4', text: 'Elaborou a APR e disponibiliza aos empregados?', weight: 3, group: 'SST' }
-    ];
+    // ITEMS MANTIDOS (IGUAIS V17)
+    const ITEMS_OBRAS = [ { id: '1.1', text: 'A contratada apresenta equipe dimensionada, qualificada, com conhecimento e habilidade para execução dos serviços? Com desempenho em conformidade com os padrões técnicos de exigências da Sabesp?', weight: 2, group: 'Qualidade' }, { id: '1.2', text: 'A contratada efetua a gestão de mão de obra de forma: a contratar profissionais de maneira ágil, manter uma baixa rotatividade e distribuir as atividades para otimizar os recursos humanos disponíveis?', weight: 2, group: 'Qualidade' }, { id: '1.3', text: 'A contratada está atendendo às Especificações Técnicas e com os padrões de qualidade determinados pela Sabesp?', weight: 2, group: 'Qualidade' }, { id: '1.4', text: 'As solicitações da Sabesp e dos órgãos públicos estão sendo atendidas conforme recomendado? Nos prazos estabelecidos e acordados?', weight: 1, group: 'Qualidade' }, { id: '1.5', text: 'A contratada teve postura pró-ativa necessária na realização da Obra e Serviços (tomando ações corretivas e preventivas)?', weight: 1, group: 'Qualidade' }, { id: '1.6', text: 'Os materiais/equipamentos fornecidos estão em conformidade com as especificações técnicas?', weight: 1, group: 'Qualidade' }, { id: '1.7', text: 'Estão sendo tomados os devidos cuidados no sentido de evitar reclamações do cliente/público em geral? A conduta é respeitosa?', weight: 1, group: 'Qualidade' }, { id: '1.8', text: 'A contratada está atendendo as exigências legais em relação as demandas ambientais?', weight: 1, group: 'Qualidade' }, { id: '2.1', text: 'A contratada apresentou previamente as ações de planejamento revisadas e atende ao cronograma acordado?', weight: 1, group: 'Prazo' }, { id: '2.2', text: 'A contratada está realizando formalmente a inspeção dos imóveis em torno das obras, com relatório fotográfico?', weight: 1, group: 'Prazo' }, { id: '2.3', text: 'A contratada atende as necessidades da Sabesp quanto aos prazos requeridos de documentação (Lei Leiva, laudos, etc)?', weight: 2, group: 'Prazo' }, { id: '2.4', text: 'A contratada está atendendo a Fiscalização quanto a entrega parcial ou definitiva dos serviços?', weight: 2, group: 'Prazo' }, { id: '2.5', text: 'A contratada está fornecendo os materiais/equipamentos nos prazos estabelecidos?', weight: 1, group: 'Prazo' }, { id: '2.6', text: 'A contratada está atendendo os procedimentos e requisitos quanto ao balanço dos materiais?', weight: 1, group: 'Prazo' }, { id: '2.7', text: 'A contratada está entregando a documentação contratual (relatório de acidentes, notas fiscais, encargos, ARTs)?', weight: 2, group: 'Prazo' }, { id: '3.1', text: 'Toda a mão de obra efetiva possui Carteira de Trabalho registrada?', weight: 2, group: 'Organização' }, { id: '3.2', text: 'A contratada tem cumprido as obrigações trabalhistas (salários, benefícios, encargos)?', weight: 2, group: 'Organização' }, { id: '3.3', text: 'A contratada toma ações preventivas e corretivas eliminando falhas identificadas na sua administração?', weight: 1, group: 'Organização' }, { id: '3.4', text: 'Todos os empregados estão uniformizados e com crachá em local visível?', weight: 1, group: 'Organização' }, { id: '3.5', text: 'Os veículos utilizados pela contratada estão identificados de forma adequada?', weight: 1, group: 'Organização' }, { id: '3.6', text: 'A contratada disponibiliza instalações e equipamentos em boas condições de uso?', weight: 1, group: 'Organização' }, { id: '4.1', text: 'A contratada atende aos procedimentos legais de segurança e saúde do trabalho?', weight: 2, group: 'SST' }, { id: '4.2', text: 'A contratada elaborou a Análise Preliminar de Risco (APR) e disponibiliza aos seus empregados?', weight: 1, group: 'SST' }, { id: '4.3', text: 'Possui água potável e copo descartável nas frentes de serviços?', weight: 2, group: 'SST' }, { id: '4.4', text: 'Banheiros possuem piso impermeável, papel higiênico, privacidade e lavatório?', weight: 3, group: 'SST' }, { id: '4.5', text: 'Local adequado e higienizado para as refeições?', weight: 1, group: 'SST' }, { id: '4.6', text: 'Vestiário dimensionado, com chuveiro aterrado e armário individual?', weight: 1, group: 'SST' }, { id: '4.7', text: 'Segue as normas de segurança para soldagem, cortes e revestimentos?', weight: 1, group: 'SST' }, { id: '4.8', text: 'Segue as normas de segurança para atividades com eletricidade (NR-10)?', weight: 1, group: 'SST' }, { id: '4.9', text: 'Segue as normas de segurança para escavação e escoramento de valas?', weight: 1, group: 'SST' }, { id: '4.10', text: 'Segue as normas de segurança para atividades em espaços confinados (NR-33)?', weight: 1, group: 'SST' }, { id: '4.11', text: 'Mantem as áreas de circulação livres e limpas?', weight: 1, group: 'SST' }, { id: '4.12', text: 'Realiza transporte e manuseio adequado de produtos químicos?', weight: 1, group: 'SST' }, { id: '4.13', text: 'Segue as normas de segurança para trabalho em altura (NR-35)?', weight: 1, group: 'SST' }, { id: '4.14', text: 'Veículos e máquinas adequados, com laudos e inspeção rotineira?', weight: 1, group: 'SST' }, { id: '4.15', text: 'Empregados utilizam EPIs adequados e com CA?', weight: 1, group: 'SST' }, { id: '4.16', text: 'Empregados utilizam EPCs adequados?', weight: 1, group: 'SST' }, { id: '4.17', text: 'Empregados conhecem e aplicam os assuntos do DDS?', weight: 1, group: 'SST' } ];
+    const ITEMS_PROJETOS = [ { id: '1.1', text: 'A contratada apresenta equipe dimensionada, qualificada e com habilidade para execução dos serviços?', weight: 2, group: 'Qualidade' }, { id: '1.2', text: 'A contratada efetua a gestão de mão de obra de forma ágil e com baixa rotatividade?', weight: 2, group: 'Qualidade' }, { id: '1.3', text: 'Os produtos (laudos, relatórios, projetos) estão em conformidade com as necessidades da Sabesp e TR?', weight: 2, group: 'Qualidade' }, { id: '1.4', text: 'A contratada está atendendo às Especificações Técnicas/Proposta Técnica?', weight: 1, group: 'Qualidade' }, { id: '1.5', text: 'As solicitações da Sabesp e órgãos públicos estão sendo atendidas nos prazos?', weight: 1, group: 'Qualidade' }, { id: '1.6', text: 'A contratada teve postura pró-ativa (ações corretivas/preventivas)?', weight: 1, group: 'Qualidade' }, { id: '1.7', text: 'A contratada está especificando MATERIAIS conforme normas da Sabesp?', weight: 1, group: 'Qualidade' }, { id: '1.8', text: 'A contratada está realizando o projeto de acordo com exigências legais ambientais?', weight: 1, group: 'Qualidade' }, { id: '2.1', text: 'A contratada apresentou planejamento revisado e atende ao cronograma?', weight: 1, group: 'Prazo' }, { id: '2.2', text: 'Atende prazos de termos, laudos e relatórios?', weight: 1, group: 'Prazo' }, { id: '2.3', text: 'Atende a Fiscalização quanto a entrega parcial ou definitiva?', weight: 2, group: 'Prazo' }, { id: '2.4', text: 'Entrega a documentação contratual (ARTs, notas fiscais, etc)?', weight: 2, group: 'Prazo' }, { id: '3.1', text: 'Mão de obra possui Carteira de Trabalho registrada?', weight: 2, group: 'Organização' }, { id: '3.2', text: 'Cumpre obrigações trabalhistas (salários, benefícios)?', weight: 2, group: 'Organização' }, { id: '3.3', text: 'Toma ações preventivas e corretivas na administração?', weight: 1, group: 'Organização' }, { id: '3.4', text: 'Empregados uniformizados e com crachá?', weight: 1, group: 'Organização' }, { id: '3.5', text: 'Veículos identificados de forma adequada?', weight: 1, group: 'Organização' }, { id: '3.6', text: 'Disponibiliza instalações e equipamentos em boas condições?', weight: 1, group: 'Organização' }, { id: '3.7', text: 'Conduta satisfatória com clientes e órgãos públicos?', weight: 1, group: 'Organização' }, { id: '4.1', text: 'Atende aos procedimentos legais de SST?', weight: 2, group: 'SST' }, { id: '4.2', text: 'Empregados utilizam EPIs adequados e com CA?', weight: 1, group: 'SST' }, { id: '4.3', text: 'Empregados utilizam EPCs adequados?', weight: 2, group: 'SST' }, { id: '4.4', text: 'Elaborou a APR e disponibiliza aos empregados?', weight: 3, group: 'SST' } ];
 
     createApp({
         data() {
@@ -444,7 +381,7 @@
                 if (!files.length || !this.selectedContract) return;
 
                 this.importLogs = [];
-                this.importLogs.push("Iniciando...");
+                this.importLogs.push("Iniciando importação V20...");
 
                 let processedCount = 0;
                 let groupedByMonth = {}; 
@@ -460,7 +397,7 @@
                                 this.finalizeImport(groupedByMonth);
                             }
                         },
-                        error: (err) => this.importLogs.push(`ERRO: ${err.message}`)
+                        error: (err) => this.importLogs.push(`ERRO CRÍTICO no arquivo ${file.name}: ${err.message}`)
                     });
                 });
             },
@@ -559,7 +496,7 @@
                 }
                 this.saveData();
                 this.renderChart();
-                if (count > 0) alert("Concluído!");
+                if (count > 0) alert("Importação concluída com sucesso!");
             },
 
             calculateScore(items, scores) {
@@ -593,7 +530,10 @@
                 const input = this.formScores[type][itemId];
                 const history = this.historyScores[type][itemId];
                 if (input === undefined || input === '' || input === null) return '-';
+                // SE NÃO TIVER HISTÓRICO, A NOTA É ELA MESMA (SEM AMORTECIMENTO)
                 if (history === undefined || history === null || history === '-') return input;
+                
+                // CÁLCULO DE AMORTECIMENTO: 70% HISTÓRICO + 30% ATUAL
                 if (Math.abs(input - history) > 2.5) {
                     const damped = (history * 0.7) + (input * 0.3);
                     return parseFloat(damped.toFixed(1));
@@ -624,8 +564,6 @@
                 if (groupAverages.length === 0) return 0;
                 return (groupAverages.reduce((a,b) => a+b, 0) / groupAverages.length).toFixed(2);
             },
-            currentScoreObra() { return this.calculateFinalAggregate(ITEMS_OBRAS, 'obra'); },
-            currentScoreProjeto() { return this.calculateFinalAggregate(ITEMS_PROJETOS, 'projeto'); },
             
             startNewEvaluation() {
                 this.currentStep = 0;
@@ -644,23 +582,57 @@
             },
             prevStep() { this.currentStep--; },
             
+            // --- CORREÇÃO V20: LOAD HISTORY COMO MÉDIA GLOBAL ---
             loadHistory() {
                 const c = this.contracts.find(x => x.id === this.formInput.contractId);
-                if (!c || c.history.length === 0) {
+                if (!c || !c.history || c.history.length === 0) {
                     this.historyScores = { obra: {}, projeto: {} };
-                } else {
-                    // CORREÇÃO CRÍTICA V18: Ordenar por Mês de Referência (YYYY-MM), não por data de criação
-                    const last = c.history.sort((a,b) => {
-                        if (a.monthRef > b.monthRef) return -1;
-                        if (a.monthRef < b.monthRef) return 1;
-                        return 0;
-                    })[0];
-                    
-                    this.historyScores = {
-                        obra: last.finalItemScoresObra || {},
-                        projeto: last.finalItemScoresProjeto || {}
-                    };
+                    return;
                 }
+
+                // ACUMULADORES
+                const sums = { obra: {}, projeto: {} };
+                const counts = { obra: {}, projeto: {} };
+
+                // VARRE TODO O HISTÓRICO
+                c.history.forEach(h => {
+                    // OBRA
+                    if (h.finalItemScoresObra) {
+                        for (const [key, val] of Object.entries(h.finalItemScoresObra)) {
+                            if (val !== null && val !== undefined && val !== '') {
+                                if (!sums.obra[key]) { sums.obra[key] = 0; counts.obra[key] = 0; }
+                                sums.obra[key] += parseFloat(val);
+                                counts.obra[key]++;
+                            }
+                        }
+                    }
+                    // PROJETO
+                    if (h.finalItemScoresProjeto) {
+                        for (const [key, val] of Object.entries(h.finalItemScoresProjeto)) {
+                            if (val !== null && val !== undefined && val !== '') {
+                                if (!sums.projeto[key]) { sums.projeto[key] = 0; counts.projeto[key] = 0; }
+                                sums.projeto[key] += parseFloat(val);
+                                counts.projeto[key]++;
+                            }
+                        }
+                    }
+                });
+
+                // CALCULA MÉDIAS
+                const avgObra = {};
+                for (const [key, sum] of Object.entries(sums.obra)) {
+                    avgObra[key] = (sum / counts.obra[key]).toFixed(1);
+                }
+
+                const avgProjeto = {};
+                for (const [key, sum] of Object.entries(sums.projeto)) {
+                    avgProjeto[key] = (sum / counts.projeto[key]).toFixed(1);
+                }
+
+                this.historyScores = {
+                    obra: avgObra,
+                    projeto: avgProjeto
+                };
             },
 
             async saveEvaluation() {
