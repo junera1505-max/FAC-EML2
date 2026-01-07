@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAC System V16 - Completo (Manual + Import)</title>
+    <title>FAC System V18 - Correção Histórico</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -32,7 +32,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-blue-600">V16</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-blue-600">V18</span></h1>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full" :class="statusColor"></span>
                         <p class="text-xs text-gray-500 font-medium">{{ statusText }}</p>
@@ -53,12 +53,10 @@
 
         <div v-if="importLogs.length > 0" class="mb-8 bg-gray-900 text-green-400 p-6 rounded-xl font-mono text-xs overflow-x-auto max-h-96 shadow-xl border border-gray-700">
             <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
-                <h3 class="text-white font-bold text-sm">DIAGNÓSTICO DA IMPORTAÇÃO</h3>
+                <h3 class="text-white font-bold text-sm">LOG DO SISTEMA</h3>
                 <button @click="importLogs = []" class="text-gray-400 hover:text-white underline">Limpar</button>
             </div>
-            <div v-for="(log, idx) in importLogs" :key="idx" class="mb-1 border-b border-gray-800 pb-1 last:border-0">
-                {{ log }}
-            </div>
+            <div v-for="(log, idx) in importLogs" :key="idx" class="mb-1 border-b border-gray-800 pb-1 last:border-0">{{ log }}</div>
         </div>
 
         <div v-if="viewMode === 'list'" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -69,7 +67,7 @@
                         <button @click="addContract" class="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">+ Novo</button>
                     </div>
                     <ul class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
-                        <li v-if="contracts.length === 0" class="p-8 text-center text-gray-400 text-sm italic">Cadastre um contrato para começar.</li>
+                        <li v-if="contracts.length === 0" class="p-8 text-center text-gray-400 text-sm italic">Nenhum contrato.</li>
                         <li v-for="contract in contracts" :key="contract.id" @click="selectContract(contract)" 
                             class="p-4 cursor-pointer hover:bg-blue-50 border-l-4 transition-all"
                             :class="selectedContract?.id === contract.id ? 'border-blue-600 bg-blue-50' : 'border-transparent'">
@@ -77,7 +75,7 @@
                             <div class="text-xs text-gray-500 mt-1 uppercase">{{ contract.supplier }}</div>
                         </li>
                     </ul>
-                    <div v-if="loading" class="p-4 text-center text-xs text-gray-400 animate-pulse">Carregando...</div>
+                    <div v-if="loading" class="p-4 text-center text-xs text-gray-400 animate-pulse">Sincronizando...</div>
                 </div>
             </div>
 
@@ -91,7 +89,7 @@
                         <label class="cursor-pointer bg-green-600 hover:bg-green-700 text-white shadow px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
                             <input type="file" accept=".csv" class="hidden" multiple @change="importLegacyExcel">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                            Importar CSV
+                            Importar Histórico
                         </label>
                         <button @click="deleteContract" class="text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold">Excluir</button>
                     </div>
@@ -117,16 +115,16 @@
                     <table class="w-full text-sm text-left">
                         <thead class="bg-white text-gray-500 font-medium border-b">
                             <tr>
-                                <th class="px-6 py-3">Mês/Ref</th>
+                                <th class="px-6 py-3">Referência</th>
                                 <th class="px-6 py-3">Engenheiro</th>
                                 <th class="px-6 py-3 text-center">Obra</th>
                                 <th class="px-6 py-3 text-center">Projeto</th>
-                                <th class="px-6 py-3 text-right">PDF</th>
+                                <th class="px-6 py-3 text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             <tr v-if="sortedHistory.length === 0">
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Histórico vazio.</td>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Sem dados.</td>
                             </tr>
                             <tr v-for="eval in sortedHistory" :key="eval.id" class="hover:bg-gray-50">
                                 <td class="px-6 py-3 font-medium">{{ eval.monthRef }}</td>
@@ -149,7 +147,7 @@
 
         <div v-if="viewMode === 'wizard'" class="max-w-5xl mx-auto">
             <div class="flex justify-between mb-8 px-4">
-                <div v-for="(step, idx) in ['Configuração', 'Obras', 'Projetos', 'Conclusão']" :key="idx" 
+                <div v-for="(step, idx) in ['Config', 'Obras', 'Projetos', 'Fim']" :key="idx" 
                      class="text-sm font-bold" 
                      :class="currentStep === idx ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400'">
                     {{ idx + 1 }}. {{ step }}
@@ -157,9 +155,8 @@
             </div>
 
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[600px] flex flex-col">
-                
                 <div v-if="currentStep === 0" class="p-10 flex flex-col justify-center h-full max-w-lg mx-auto w-full space-y-6">
-                    <h2 class="text-2xl font-bold text-center text-gray-800">Nova Medição Manual</h2>
+                    <h2 class="text-2xl font-bold text-center text-gray-800">Nova Medição</h2>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Contrato</label>
                         <select v-model="formInput.contractId" class="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -184,10 +181,9 @@
                         <h2 class="text-lg font-bold text-gray-800">{{ currentStep === 1 ? 'Avaliação de Obras' : 'Avaliação de Projetos' }}</h2>
                         <label class="flex items-center gap-2 cursor-pointer bg-gray-100 px-3 py-1 rounded">
                             <input type="checkbox" v-model="currentStep === 1 ? skipSteps.obra : skipSteps.projeto" class="w-4 h-4 rounded text-blue-600">
-                            <span class="text-sm font-medium text-gray-600">Pular etapa</span>
+                            <span class="text-sm font-medium text-gray-600">Não se aplica</span>
                         </label>
                     </div>
-                    
                     <div v-if="!(currentStep === 1 ? skipSteps.obra : skipSteps.projeto)" class="flex-1 overflow-y-auto p-6 bg-gray-50/30">
                         <div v-for="group in (currentStep === 1 ? structureObra : structureProjeto)" :key="group.name" class="mb-8">
                             <h3 class="font-bold text-gray-800 mb-4 px-2 border-l-4 border-blue-500">{{ group.name }}</h3>
@@ -195,20 +191,23 @@
                                 <div v-for="item in group.items" :key="item.id" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                                     <div class="flex flex-col md:flex-row gap-4 items-start">
                                         <div class="flex-1">
-                                            <span class="inline-block bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1">{{ item.id }}</span>
-                                            <p class="text-sm text-gray-700">{{ item.text }}</p>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="inline-block bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded">{{ item.id }}</span>
+                                                <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">Peso {{ item.weight }}</span>
+                                            </div>
+                                            <p class="text-sm text-gray-700 leading-relaxed">{{ item.text }}</p>
                                         </div>
-                                        <div class="flex gap-3">
+                                        <div class="flex gap-3 items-end">
                                             <div class="text-center">
                                                 <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Histórico</div>
-                                                <div class="w-16 py-2 bg-gray-50 text-gray-400 font-mono text-sm rounded border">{{ getHistoryValue(currentStep === 1 ? 'obra' : 'projeto', item.id) }}</div>
+                                                <div class="w-16 py-2 bg-gray-50 text-gray-600 font-mono text-sm rounded border font-bold">{{ getHistoryValue(currentStep === 1 ? 'obra' : 'projeto', item.id) }}</div>
                                             </div>
                                             <div class="text-center">
-                                                <div class="text-[10px] text-blue-600 font-bold uppercase mb-1">Sua Nota</div>
+                                                <div class="text-[10px] text-blue-600 font-bold uppercase mb-1">Nota</div>
                                                 <input type="number" min="0" max="10" step="0.1" v-model.number="getFormScoreObj(currentStep === 1 ? 'obra' : 'projeto')[item.id]" 
                                                     class="w-16 py-2 text-center font-bold border-2 border-gray-300 rounded focus:border-blue-500 outline-none">
                                             </div>
-                                            <div class="text-center relative">
+                                            <div class="text-center">
                                                 <div class="text-[10px] text-green-600 font-bold uppercase mb-1">Final</div>
                                                 <div class="w-16 py-2 font-bold bg-green-50 text-green-700 rounded border border-green-200"
                                                      :class="{'bg-yellow-100 text-yellow-800 border-yellow-300': isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)}">
@@ -217,34 +216,28 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
                                     <div v-if="isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)" class="mt-3 pt-3 border-t border-gray-100">
                                         <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
-                                            <p class="text-xs text-yellow-800 font-bold mb-1">⚠️ Variação brusca detectada: Justificativa Obrigatória</p>
-                                            <textarea v-model="justifications[(currentStep === 1 ? 'obra' : 'projeto') + item.id]"
-                                                class="w-full text-sm bg-white border border-yellow-300 rounded p-2 outline-none" rows="2" placeholder="Explique o motivo da variação..."></textarea>
+                                            <p class="text-xs text-yellow-800 font-bold mb-1">Justificativa Obrigatória</p>
+                                            <textarea v-model="justifications[(currentStep === 1 ? 'obra' : 'projeto') + item.id]" class="w-full text-sm bg-white border border-yellow-300 rounded p-2 outline-none"></textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div v-else class="flex-1 flex items-center justify-center text-gray-400 italic">Etapa marcada como "Não se aplica".</div>
+                    <div v-else class="flex-1 flex items-center justify-center text-gray-400 italic">Etapa pulada.</div>
                 </div>
 
                 <div v-if="currentStep === 3" class="flex-1 p-10 text-center flex flex-col items-center justify-center">
-                    <div class="bg-green-100 p-4 rounded-full mb-6">
-                        <span class="text-4xl">✅</span>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Medição Concluída</h2>
-                    <p class="text-gray-500 mb-8">Revise os índices finais antes de salvar no banco de dados.</p>
-                    <div class="grid grid-cols-2 gap-8 w-full max-w-2xl mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Conclusão</h2>
+                    <div class="grid grid-cols-2 gap-8 w-full max-w-2xl my-8">
                         <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                            <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Índice Obras</span>
+                            <span class="text-xs font-bold text-blue-400 uppercase">Obras</span>
                             <div class="text-5xl font-bold text-blue-600 mt-2">{{ skipSteps.obra ? '-' : currentScoreObra }}</div>
                         </div>
                         <div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
-                            <span class="text-xs font-bold text-purple-400 uppercase tracking-wider">Índice Projetos</span>
+                            <span class="text-xs font-bold text-purple-400 uppercase">Projetos</span>
                             <div class="text-5xl font-bold text-purple-600 mt-2">{{ skipSteps.projeto ? '-' : currentScoreProjeto }}</div>
                         </div>
                     </div>
@@ -253,18 +246,16 @@
                 <div class="p-5 border-t bg-white flex justify-between items-center">
                     <button @click="prevStep" :disabled="currentStep === 0" class="px-6 py-2 rounded border text-gray-600 hover:bg-gray-50 disabled:opacity-30">Voltar</button>
                     <div v-if="currentStep < 3">
-                        <button @click="nextStep" class="px-8 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg">Próximo Passo &rarr;</button>
+                        <button @click="nextStep" class="px-8 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg">Próximo</button>
                     </div>
                     <div v-if="currentStep === 3">
-                        <button @click="saveEvaluation" :disabled="!canSave || loading" 
-                            class="px-8 py-2 rounded bg-green-600 text-white font-bold hover:bg-green-700 disabled:bg-gray-300 flex items-center gap-2 shadow-lg">
-                            <span>{{ loading ? 'Salvando...' : '💾 Salvar e Finalizar' }}</span>
+                        <button @click="saveEvaluation" :disabled="!canSave || loading" class="px-8 py-2 rounded bg-green-600 text-white font-bold hover:bg-green-700 disabled:bg-gray-300 shadow-lg">
+                            {{ loading ? 'Salvando...' : 'Salvar' }}
                         </button>
                     </div>
                 </div>
-                
                 <div v-if="currentStep === 3 && !canSave" class="bg-red-50 text-red-600 text-xs text-center py-2 font-bold border-t border-red-100">
-                    ⚠️ Existem justificativas pendentes. Volte e preencha os campos em amarelo.
+                    Justifique as variações bruscas antes de salvar.
                 </div>
             </div>
         </div>
@@ -275,13 +266,75 @@
     const { createApp } = Vue;
     const { jsPDF } = window.jspdf;
 
-    // --- CONFIGURAÇÃO JSONBIN (COLE SUAS CHAVES AQUI) ---
     const BIN_ID = '695d15b5ae596e708fc8e7e9';      // SEU BIN ID
     const API_KEY = '$2a$10$liiTV5DQT6G5KonVb6s4kelHDbpbUiMi4a5s63V8LYgmehkNL8hjS';     // SUA MASTER KEY
 
-    // Definições de Itens (Mesmas das versões anteriores)
-    const ITEMS_OBRAS = [ { id: '1.1', weight: 2, group: 'Qualidade' }, { id: '1.2', weight: 2, group: 'Qualidade' }, { id: '1.3', weight: 2, group: 'Qualidade' }, { id: '1.4', weight: 1, group: 'Qualidade' }, { id: '1.5', weight: 1, group: 'Qualidade' }, { id: '1.6', weight: 1, group: 'Qualidade' }, { id: '1.7', weight: 1, group: 'Qualidade' }, { id: '1.8', weight: 1, group: 'Qualidade' }, { id: '2.1', weight: 1, group: 'Prazo' }, { id: '2.2', weight: 1, group: 'Prazo' }, { id: '2.3', weight: 2, group: 'Prazo' }, { id: '2.4', weight: 2, group: 'Prazo' }, { id: '2.5', weight: 1, group: 'Prazo' }, { id: '2.6', weight: 1, group: 'Prazo' }, { id: '2.7', weight: 2, group: 'Prazo' }, { id: '3.1', weight: 2, group: 'Organização' }, { id: '3.2', weight: 2, group: 'Organização' }, { id: '3.3', weight: 1, group: 'Organização' }, { id: '3.4', weight: 1, group: 'Organização' }, { id: '3.5', weight: 1, group: 'Organização' }, { id: '3.6', weight: 1, group: 'Organização' }, { id: '4.1', weight: 2, group: 'SST' }, { id: '4.2', weight: 1, group: 'SST' }, { id: '4.3', weight: 2, group: 'SST' }, { id: '4.4', weight: 3, group: 'SST' }, { id: '4.5', weight: 1, group: 'SST' }, { id: '4.6', weight: 1, group: 'SST' }, { id: '4.7', weight: 1, group: 'SST' }, { id: '4.8', weight: 1, group: 'SST' }, { id: '4.9', weight: 1, group: 'SST' }, { id: '4.10', weight: 1, group: 'SST' }, { id: '4.11', weight: 1, group: 'SST' }, { id: '4.12', weight: 1, group: 'SST' }, { id: '4.13', weight: 1, group: 'SST' }, { id: '4.14', weight: 1, group: 'SST' }, { id: '4.15', weight: 1, group: 'SST' }, { id: '4.16', weight: 1, group: 'SST' }, { id: '4.17', weight: 1, group: 'SST' } ];
-    const ITEMS_PROJETOS = [ { id: '1.1', weight: 2, group: 'Qualidade' }, { id: '1.2', weight: 2, group: 'Qualidade' }, { id: '1.3', weight: 2, group: 'Qualidade' }, { id: '1.4', weight: 1, group: 'Qualidade' }, { id: '1.5', weight: 1, group: 'Qualidade' }, { id: '1.6', weight: 1, group: 'Qualidade' }, { id: '1.7', weight: 1, group: 'Qualidade' }, { id: '1.8', weight: 1, group: 'Qualidade' }, { id: '2.1', weight: 1, group: 'Prazo' }, { id: '2.2', weight: 1, group: 'Prazo' }, { id: '2.3', weight: 2, group: 'Prazo' }, { id: '2.4', weight: 2, group: 'Prazo' }, { id: '3.1', weight: 2, group: 'Organização' }, { id: '3.2', weight: 2, group: 'Organização' }, { id: '3.3', weight: 1, group: 'Organização' }, { id: '3.4', weight: 1, group: 'Organização' }, { id: '3.5', weight: 1, group: 'Organização' }, { id: '3.6', weight: 1, group: 'Organização' }, { id: '3.7', weight: 1, group: 'Organização' }, { id: '4.1', weight: 2, group: 'SST' }, { id: '4.2', weight: 1, group: 'SST' }, { id: '4.3', weight: 2, group: 'SST' }, { id: '4.4', weight: 3, group: 'SST' } ];
+    const ITEMS_OBRAS = [
+        { id: '1.1', text: 'A contratada apresenta equipe dimensionada, qualificada, com conhecimento e habilidade para execução dos serviços? Com desempenho em conformidade com os padrões técnicos de exigências da Sabesp?', weight: 2, group: 'Qualidade' },
+        { id: '1.2', text: 'A contratada efetua a gestão de mão de obra de forma: a contratar profissionais de maneira ágil, manter uma baixa rotatividade e distribuir as atividades para otimizar os recursos humanos disponíveis?', weight: 2, group: 'Qualidade' },
+        { id: '1.3', text: 'A contratada está atendendo às Especificações Técnicas e com os padrões de qualidade determinados pela Sabesp?', weight: 2, group: 'Qualidade' },
+        { id: '1.4', text: 'As solicitações da Sabesp e dos órgãos públicos estão sendo atendidas conforme recomendado? Nos prazos estabelecidos e acordados?', weight: 1, group: 'Qualidade' },
+        { id: '1.5', text: 'A contratada teve postura pró-ativa necessária na realização da Obra e Serviços (tomando ações corretivas e preventivas)?', weight: 1, group: 'Qualidade' },
+        { id: '1.6', text: 'Os materiais/equipamentos fornecidos estão em conformidade com as especificações técnicas?', weight: 1, group: 'Qualidade' },
+        { id: '1.7', text: 'Estão sendo tomados os devidos cuidados no sentido de evitar reclamações do cliente/público em geral? A conduta é respeitosa?', weight: 1, group: 'Qualidade' },
+        { id: '1.8', text: 'A contratada está atendendo as exigências legais em relação as demandas ambientais?', weight: 1, group: 'Qualidade' },
+        { id: '2.1', text: 'A contratada apresentou previamente as ações de planejamento revisadas e atende ao cronograma acordado?', weight: 1, group: 'Prazo' },
+        { id: '2.2', text: 'A contratada está realizando formalmente a inspeção dos imóveis em torno das obras, com relatório fotográfico?', weight: 1, group: 'Prazo' },
+        { id: '2.3', text: 'A contratada atende as necessidades da Sabesp quanto aos prazos requeridos de documentação (Lei Leiva, laudos, etc)?', weight: 2, group: 'Prazo' },
+        { id: '2.4', text: 'A contratada está atendendo a Fiscalização quanto a entrega parcial ou definitiva dos serviços?', weight: 2, group: 'Prazo' },
+        { id: '2.5', text: 'A contratada está fornecendo os materiais/equipamentos nos prazos estabelecidos?', weight: 1, group: 'Prazo' },
+        { id: '2.6', text: 'A contratada está atendendo os procedimentos e requisitos quanto ao balanço dos materiais?', weight: 1, group: 'Prazo' },
+        { id: '2.7', text: 'A contratada está entregando a documentação contratual (relatório de acidentes, notas fiscais, encargos, ARTs)?', weight: 2, group: 'Prazo' },
+        { id: '3.1', text: 'Toda a mão de obra efetiva possui Carteira de Trabalho registrada?', weight: 2, group: 'Organização' },
+        { id: '3.2', text: 'A contratada tem cumprido as obrigações trabalhistas (salários, benefícios, encargos)?', weight: 2, group: 'Organização' },
+        { id: '3.3', text: 'A contratada toma ações preventivas e corretivas eliminando falhas identificadas na sua administração?', weight: 1, group: 'Organização' },
+        { id: '3.4', text: 'Todos os empregados estão uniformizados e com crachá em local visível?', weight: 1, group: 'Organização' },
+        { id: '3.5', text: 'Os veículos utilizados pela contratada estão identificados de forma adequada?', weight: 1, group: 'Organização' },
+        { id: '3.6', text: 'A contratada disponibiliza instalações e equipamentos em boas condições de uso?', weight: 1, group: 'Organização' },
+        { id: '4.1', text: 'A contratada atende aos procedimentos legais de segurança e saúde do trabalho?', weight: 2, group: 'SST' },
+        { id: '4.2', text: 'A contratada elaborou a Análise Preliminar de Risco (APR) e disponibiliza aos seus empregados?', weight: 1, group: 'SST' },
+        { id: '4.3', text: 'Possui água potável e copo descartável nas frentes de serviços?', weight: 2, group: 'SST' },
+        { id: '4.4', text: 'Banheiros possuem piso impermeável, papel higiênico, privacidade e lavatório?', weight: 3, group: 'SST' },
+        { id: '4.5', text: 'Local adequado e higienizado para as refeições?', weight: 1, group: 'SST' },
+        { id: '4.6', text: 'Vestiário dimensionado, com chuveiro aterrado e armário individual?', weight: 1, group: 'SST' },
+        { id: '4.7', text: 'Segue as normas de segurança para soldagem, cortes e revestimentos?', weight: 1, group: 'SST' },
+        { id: '4.8', text: 'Segue as normas de segurança para atividades com eletricidade (NR-10)?', weight: 1, group: 'SST' },
+        { id: '4.9', text: 'Segue as normas de segurança para escavação e escoramento de valas?', weight: 1, group: 'SST' },
+        { id: '4.10', text: 'Segue as normas de segurança para atividades em espaços confinados (NR-33)?', weight: 1, group: 'SST' },
+        { id: '4.11', text: 'Mantem as áreas de circulação livres e limpas?', weight: 1, group: 'SST' },
+        { id: '4.12', text: 'Realiza transporte e manuseio adequado de produtos químicos?', weight: 1, group: 'SST' },
+        { id: '4.13', text: 'Segue as normas de segurança para trabalho em altura (NR-35)?', weight: 1, group: 'SST' },
+        { id: '4.14', text: 'Veículos e máquinas adequados, com laudos e inspeção rotineira?', weight: 1, group: 'SST' },
+        { id: '4.15', text: 'Empregados utilizam EPIs adequados e com CA?', weight: 1, group: 'SST' },
+        { id: '4.16', text: 'Empregados utilizam EPCs adequados?', weight: 1, group: 'SST' },
+        { id: '4.17', text: 'Empregados conhecem e aplicam os assuntos do DDS?', weight: 1, group: 'SST' }
+    ];
+
+    const ITEMS_PROJETOS = [
+        { id: '1.1', text: 'A contratada apresenta equipe dimensionada, qualificada e com habilidade para execução dos serviços?', weight: 2, group: 'Qualidade' },
+        { id: '1.2', text: 'A contratada efetua a gestão de mão de obra de forma ágil e com baixa rotatividade?', weight: 2, group: 'Qualidade' },
+        { id: '1.3', text: 'Os produtos (laudos, relatórios, projetos) estão em conformidade com as necessidades da Sabesp e TR?', weight: 2, group: 'Qualidade' },
+        { id: '1.4', text: 'A contratada está atendendo às Especificações Técnicas/Proposta Técnica?', weight: 1, group: 'Qualidade' },
+        { id: '1.5', text: 'As solicitações da Sabesp e órgãos públicos estão sendo atendidas nos prazos?', weight: 1, group: 'Qualidade' },
+        { id: '1.6', text: 'A contratada teve postura pró-ativa (ações corretivas/preventivas)?', weight: 1, group: 'Qualidade' },
+        { id: '1.7', text: 'A contratada está especificando MATERIAIS conforme normas da Sabesp?', weight: 1, group: 'Qualidade' },
+        { id: '1.8', text: 'A contratada está realizando o projeto de acordo com exigências legais ambientais?', weight: 1, group: 'Qualidade' },
+        { id: '2.1', text: 'A contratada apresentou planejamento revisado e atende ao cronograma?', weight: 1, group: 'Prazo' },
+        { id: '2.2', text: 'Atende prazos de termos, laudos e relatórios?', weight: 1, group: 'Prazo' },
+        { id: '2.3', text: 'Atende a Fiscalização quanto a entrega parcial ou definitiva?', weight: 2, group: 'Prazo' },
+        { id: '2.4', text: 'Entrega a documentação contratual (ARTs, notas fiscais, etc)?', weight: 2, group: 'Prazo' },
+        { id: '3.1', text: 'Mão de obra possui Carteira de Trabalho registrada?', weight: 2, group: 'Organização' },
+        { id: '3.2', text: 'Cumpre obrigações trabalhistas (salários, benefícios)?', weight: 2, group: 'Organização' },
+        { id: '3.3', text: 'Toma ações preventivas e corretivas na administração?', weight: 1, group: 'Organização' },
+        { id: '3.4', text: 'Empregados uniformizados e com crachá?', weight: 1, group: 'Organização' },
+        { id: '3.5', text: 'Veículos identificados de forma adequada?', weight: 1, group: 'Organização' },
+        { id: '3.6', text: 'Disponibiliza instalações e equipamentos em boas condições?', weight: 1, group: 'Organização' },
+        { id: '3.7', text: 'Conduta satisfatória com clientes e órgãos públicos?', weight: 1, group: 'Organização' },
+        { id: '4.1', text: 'Atende aos procedimentos legais de SST?', weight: 2, group: 'SST' },
+        { id: '4.2', text: 'Empregados utilizam EPIs adequados e com CA?', weight: 1, group: 'SST' },
+        { id: '4.3', text: 'Empregados utilizam EPCs adequados?', weight: 2, group: 'SST' },
+        { id: '4.4', text: 'Elaborou a APR e disponibiliza aos empregados?', weight: 3, group: 'SST' }
+    ];
 
     createApp({
         data() {
@@ -386,13 +439,12 @@
                 this.selectedContract = null;
             },
 
-            // --- IMPORTAÇÃO V15: ULTRA TOLERANTE ---
             importLegacyExcel(event) {
                 const files = event.target.files;
                 if (!files.length || !this.selectedContract) return;
 
                 this.importLogs = [];
-                this.importLogs.push("Iniciando importação V15...");
+                this.importLogs.push("Iniciando...");
 
                 let processedCount = 0;
                 let groupedByMonth = {}; 
@@ -408,7 +460,7 @@
                                 this.finalizeImport(groupedByMonth);
                             }
                         },
-                        error: (err) => this.importLogs.push(`ERRO CRÍTICO no arquivo ${file.name}: ${err.message}`)
+                        error: (err) => this.importLogs.push(`ERRO: ${err.message}`)
                     });
                 });
             },
@@ -419,17 +471,12 @@
                 let engineer = "Importado";
                 let scores = {};
                 
-                // 1. Busca por TIPO e ENGENHEIRO
                 for (const row of rows) {
                     const rowStr = row.join(' ').toUpperCase();
                     if (rowStr.includes("FAC | OBRAS") || rowStr.includes("FAC|OBRAS") || rowStr.includes("FAC | OBRA")) type = "OBRA";
                     if (rowStr.includes("FAC | PROJETOS") || rowStr.includes("FAC|PROJETOS") || rowStr.includes("FAC | PROJETO")) type = "PROJETO";
-                    if (rowStr.includes("RESPONSAVEL")) {
-                        // Tenta achar nome...
-                    }
                 }
 
-                // 2. Busca por DATA
                 for (const row of rows) {
                     const rowStr = row.join(' ');
                     const matches = rowStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
@@ -443,12 +490,10 @@
                     }
                 }
 
-                if (!type) this.importLogs.push(`ALERTA (${fileName}): Não identifiquei se é OBRA ou PROJETO.`);
-                if (!monthRef) this.importLogs.push(`ERRO (${fileName}): Não encontrei data válida.`);
-                
+                if (!type) this.importLogs.push(`AVISO: Tipo indefinido em ${fileName}.`);
+                if (!monthRef) this.importLogs.push(`ERRO: Sem data em ${fileName}.`);
                 if (!monthRef) return; 
 
-                // 3. Busca por NOTAS (Varredura Linha a Linha)
                 rows.forEach(row => {
                     let itemID = null;
                     for (let c = 0; c < 5; c++) {
@@ -460,7 +505,6 @@
                     }
 
                     if (itemID) {
-                        // Heurística: Pega o último número válido na linha (0-10)
                         let foundVals = [];
                         for (let c = 0; c < row.length; c++) {
                             const valStr = row[c] ? row[c].toString().replace(',', '.') : "";
@@ -475,11 +519,8 @@
                     }
                 });
 
-                if (Object.keys(scores).length === 0) {
-                    this.importLogs.push(`ALERTA (${fileName}): Data OK, Tipo OK, mas ZERO notas.`);
-                } else {
-                    this.importLogs.push(`SUCESSO (${fileName}): ${monthRef} - ${type || 'Indefinido'} - ${Object.keys(scores).length} notas.`);
-                    
+                if (Object.keys(scores).length > 0) {
+                    this.importLogs.push(`OK: ${monthRef} (${type}) - ${Object.keys(scores).length} notas.`);
                     if (!groupedData[monthRef]) groupedData[monthRef] = { monthRef, engineer, scoresObra: {}, scoresProjeto: {} };
                     if (type === "OBRA") groupedData[monthRef].scoresObra = { ...groupedData[monthRef].scoresObra, ...scores };
                     else groupedData[monthRef].scoresProjeto = { ...groupedData[monthRef].scoresProjeto, ...scores };
@@ -518,8 +559,7 @@
                 }
                 this.saveData();
                 this.renderChart();
-                if (count > 0) alert("Importação concluída com sucesso!");
-                else alert("Nenhum dado válido. Veja o log preto.");
+                if (count > 0) alert("Concluído!");
             },
 
             calculateScore(items, scores) {
@@ -587,7 +627,6 @@
             currentScoreObra() { return this.calculateFinalAggregate(ITEMS_OBRAS, 'obra'); },
             currentScoreProjeto() { return this.calculateFinalAggregate(ITEMS_PROJETOS, 'projeto'); },
             
-            // WIZARD START
             startNewEvaluation() {
                 this.currentStep = 0;
                 this.formInput = { contractId: null, monthRef: new Date().toISOString().slice(0, 7), engineer: '' };
@@ -604,18 +643,26 @@
                 this.currentStep++;
             },
             prevStep() { this.currentStep--; },
+            
             loadHistory() {
                 const c = this.contracts.find(x => x.id === this.formInput.contractId);
                 if (!c || c.history.length === 0) {
                     this.historyScores = { obra: {}, projeto: {} };
                 } else {
-                    const last = c.history.sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+                    // CORREÇÃO CRÍTICA V18: Ordenar por Mês de Referência (YYYY-MM), não por data de criação
+                    const last = c.history.sort((a,b) => {
+                        if (a.monthRef > b.monthRef) return -1;
+                        if (a.monthRef < b.monthRef) return 1;
+                        return 0;
+                    })[0];
+                    
                     this.historyScores = {
                         obra: last.finalItemScoresObra || {},
                         projeto: last.finalItemScoresProjeto || {}
                     };
                 }
             },
+
             async saveEvaluation() {
                 const finalItemScoresObra = {};
                 const finalItemScoresProjeto = {};
