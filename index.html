@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAC System V14 - Debug Mode</title>
+    <title>FAC System V16 - Completo (Manual + Import)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -28,11 +28,11 @@
     <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                <div class="bg-blue-600 text-white p-2 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-indigo-600">V14 (Debug)</span></h1>
+                    <h1 class="text-xl font-bold text-gray-900">FAC System <span class="text-blue-600">V16</span></h1>
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full" :class="statusColor"></span>
                         <p class="text-xs text-gray-500 font-medium">{{ statusText }}</p>
@@ -42,7 +42,7 @@
             
             <div class="flex gap-4">
                 <button v-if="viewMode !== 'list'" @click="viewMode = 'list'" class="text-gray-500 hover:text-gray-800 font-medium px-3 text-sm">Cancelar</button>
-                <button v-if="viewMode === 'list'" @click="startNewEvaluation" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg shadow font-semibold text-sm flex items-center gap-2">
+                <button v-if="viewMode === 'list'" @click="startNewEvaluation" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow font-semibold text-sm flex items-center gap-2">
                     + Nova Medição
                 </button>
             </div>
@@ -51,10 +51,14 @@
 
     <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
 
-        <div v-if="importLogs.length > 0" class="mb-8 bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-xs overflow-x-auto max-h-60 shadow-lg border border-gray-700">
-            <h3 class="text-white font-bold mb-2 border-b border-gray-600 pb-1">RELATÓRIO DE IMPORTAÇÃO (DEBUG)</h3>
-            <div v-for="(log, idx) in importLogs" :key="idx">{{ log }}</div>
-            <button @click="importLogs = []" class="mt-2 text-white bg-gray-600 px-2 py-1 rounded hover:bg-gray-500">Limpar Log</button>
+        <div v-if="importLogs.length > 0" class="mb-8 bg-gray-900 text-green-400 p-6 rounded-xl font-mono text-xs overflow-x-auto max-h-96 shadow-xl border border-gray-700">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                <h3 class="text-white font-bold text-sm">DIAGNÓSTICO DA IMPORTAÇÃO</h3>
+                <button @click="importLogs = []" class="text-gray-400 hover:text-white underline">Limpar</button>
+            </div>
+            <div v-for="(log, idx) in importLogs" :key="idx" class="mb-1 border-b border-gray-800 pb-1 last:border-0">
+                {{ log }}
+            </div>
         </div>
 
         <div v-if="viewMode === 'list'" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -62,47 +66,44 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-5 border-b bg-gray-50 flex justify-between items-center">
                         <h3 class="font-bold text-gray-700">Contratos</h3>
-                        <button @click="addContract" class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100">+ Novo</button>
+                        <button @click="addContract" class="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">+ Novo</button>
                     </div>
                     <ul class="divide-y divide-gray-50 max-h-[600px] overflow-y-auto">
-                        <li v-if="contracts.length === 0" class="p-8 text-center text-gray-400 text-sm italic">Nenhum contrato cadastrado.</li>
+                        <li v-if="contracts.length === 0" class="p-8 text-center text-gray-400 text-sm italic">Cadastre um contrato para começar.</li>
                         <li v-for="contract in contracts" :key="contract.id" @click="selectContract(contract)" 
-                            class="p-4 cursor-pointer hover:bg-indigo-50 border-l-4 transition-all"
-                            :class="selectedContract?.id === contract.id ? 'border-indigo-600 bg-indigo-50' : 'border-transparent'">
+                            class="p-4 cursor-pointer hover:bg-blue-50 border-l-4 transition-all"
+                            :class="selectedContract?.id === contract.id ? 'border-blue-600 bg-blue-50' : 'border-transparent'">
                             <div class="font-bold text-gray-800">{{ contract.name }}</div>
                             <div class="text-xs text-gray-500 mt-1 uppercase">{{ contract.supplier }}</div>
                         </li>
                     </ul>
-                    <div v-if="loading" class="p-4 text-center text-xs text-gray-400 animate-pulse">Sincronizando...</div>
+                    <div v-if="loading" class="p-4 text-center text-xs text-gray-400 animate-pulse">Carregando...</div>
                 </div>
             </div>
 
             <div class="lg:col-span-8 space-y-6" v-if="selectedContract">
-                
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-800">{{ selectedContract.name }}</h2>
-                        <p class="text-sm text-gray-500 font-medium uppercase tracking-wide">{{ selectedContract.supplier }}</p>
+                        <p class="text-sm text-gray-500 font-medium uppercase">{{ selectedContract.supplier }}</p>
                     </div>
-                    <div class="flex gap-2 flex-wrap">
+                    <div class="flex gap-2">
                         <label class="cursor-pointer bg-green-600 hover:bg-green-700 text-white shadow px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
                             <input type="file" accept=".csv" class="hidden" multiple @change="importLegacyExcel">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Importar CSV (V14)
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                            Importar CSV
                         </label>
-                        <button @click="deleteContract" class="text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
-                            Excluir
-                        </button>
+                        <button @click="deleteContract" class="text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg text-xs font-bold">Excluir</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Média Geral Obras</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Média Obras</p>
                         <p class="text-3xl font-bold text-blue-600">{{ contractAverageObra }}</p>
                     </div>
                     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                        <p class="text-xs font-bold text-gray-400 uppercase">Média Geral Projetos</p>
+                        <p class="text-xs font-bold text-gray-400 uppercase">Média Projetos</p>
                         <p class="text-3xl font-bold text-purple-600">{{ contractAverageProjeto }}</p>
                     </div>
                 </div>
@@ -112,10 +113,7 @@
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700 text-sm flex justify-between items-center">
-                        <span>Histórico de Medições</span>
-                        <span class="text-xs text-gray-400 font-normal">Ordenado por data</span>
-                    </div>
+                    <div class="px-6 py-4 border-b bg-gray-50 font-bold text-gray-700 text-sm">Histórico</div>
                     <table class="w-full text-sm text-left">
                         <thead class="bg-white text-gray-500 font-medium border-b">
                             <tr>
@@ -128,17 +126,15 @@
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             <tr v-if="sortedHistory.length === 0">
-                                <td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Nenhum histórico. Importe as planilhas FAC (.csv) para começar.</td>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-400 italic">Histórico vazio.</td>
                             </tr>
-                            <tr v-for="eval in sortedHistory" :key="eval.id" class="hover:bg-gray-50 transition-colors">
+                            <tr v-for="eval in sortedHistory" :key="eval.id" class="hover:bg-gray-50">
                                 <td class="px-6 py-3 font-medium">{{ eval.monthRef }}</td>
                                 <td class="px-6 py-3 text-gray-600">{{ eval.engineer }}</td>
                                 <td class="px-6 py-3 text-center font-bold text-blue-600">{{ eval.skippedObra ? '-' : eval.finalScoreObra }}</td>
                                 <td class="px-6 py-3 text-center font-bold text-purple-600">{{ eval.skippedProjeto ? '-' : eval.finalScoreProjeto }}</td>
                                 <td class="px-6 py-3 text-right">
-                                    <button @click="generatePDF(eval)" class="text-red-600 hover:text-red-800 font-bold text-xs border border-red-200 px-2 py-1 rounded hover:bg-red-50">
-                                        Gerar PDF
-                                    </button>
+                                    <button @click="generatePDF(eval)" class="text-red-600 hover:text-red-800 font-bold text-xs border border-red-200 px-2 py-1 rounded">PDF</button>
                                 </td>
                             </tr>
                         </tbody>
@@ -146,24 +142,130 @@
                 </div>
             </div>
             
-            <div v-else class="lg:col-span-8 flex items-center justify-center bg-white rounded-xl border border-dashed border-gray-300 h-96">
-                <p class="text-gray-400 font-medium">Selecione um contrato ao lado para gerenciar.</p>
+            <div v-else class="lg:col-span-8 flex items-center justify-center bg-white rounded-xl border border-dashed border-gray-300 h-96 text-gray-400">
+                Selecione um contrato.
             </div>
         </div>
 
         <div v-if="viewMode === 'wizard'" class="max-w-5xl mx-auto">
             <div class="flex justify-between mb-8 px-4">
-                <div v-for="(step, idx) in ['Config', 'Obras', 'Projetos', 'Conclusão']" :key="idx" 
+                <div v-for="(step, idx) in ['Configuração', 'Obras', 'Projetos', 'Conclusão']" :key="idx" 
                      class="text-sm font-bold" 
-                     :class="currentStep === idx ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-400'">
+                     :class="currentStep === idx ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400'">
                     {{ idx + 1 }}. {{ step }}
                 </div>
             </div>
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[600px] flex flex-col p-10 items-center justify-center">
-                <h2 class="text-xl font-bold mb-4">Wizard de Avaliação</h2>
-                <p class="text-gray-500 mb-4">Use o fluxo passo a passo para criar novas medições manualmente.</p>
-                <button @click="startNewEvaluation" class="bg-indigo-600 text-white px-6 py-2 rounded">Iniciar Manualmente</button>
-                <button @click="viewMode='list'" class="mt-4 text-gray-500 underline">Voltar</button>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-h-[600px] flex flex-col">
+                
+                <div v-if="currentStep === 0" class="p-10 flex flex-col justify-center h-full max-w-lg mx-auto w-full space-y-6">
+                    <h2 class="text-2xl font-bold text-center text-gray-800">Nova Medição Manual</h2>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Contrato</label>
+                        <select v-model="formInput.contractId" class="w-full p-3 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option :value="null" disabled>Selecione...</option>
+                            <option v-for="c in contracts" :value="c.id">{{ c.name }}</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Mês Ref.</label>
+                            <input type="month" v-model="formInput.monthRef" class="w-full p-3 border rounded-lg bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Engenheiro</label>
+                            <input type="text" v-model="formInput.engineer" class="w-full p-3 border rounded-lg bg-gray-50">
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="currentStep === 1 || currentStep === 2" class="flex-1 flex flex-col">
+                    <div class="px-6 py-4 bg-gray-50 border-b flex justify-between items-center sticky top-0 z-20 shadow-sm">
+                        <h2 class="text-lg font-bold text-gray-800">{{ currentStep === 1 ? 'Avaliação de Obras' : 'Avaliação de Projetos' }}</h2>
+                        <label class="flex items-center gap-2 cursor-pointer bg-gray-100 px-3 py-1 rounded">
+                            <input type="checkbox" v-model="currentStep === 1 ? skipSteps.obra : skipSteps.projeto" class="w-4 h-4 rounded text-blue-600">
+                            <span class="text-sm font-medium text-gray-600">Pular etapa</span>
+                        </label>
+                    </div>
+                    
+                    <div v-if="!(currentStep === 1 ? skipSteps.obra : skipSteps.projeto)" class="flex-1 overflow-y-auto p-6 bg-gray-50/30">
+                        <div v-for="group in (currentStep === 1 ? structureObra : structureProjeto)" :key="group.name" class="mb-8">
+                            <h3 class="font-bold text-gray-800 mb-4 px-2 border-l-4 border-blue-500">{{ group.name }}</h3>
+                            <div class="space-y-4">
+                                <div v-for="item in group.items" :key="item.id" class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+                                    <div class="flex flex-col md:flex-row gap-4 items-start">
+                                        <div class="flex-1">
+                                            <span class="inline-block bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded mb-1">{{ item.id }}</span>
+                                            <p class="text-sm text-gray-700">{{ item.text }}</p>
+                                        </div>
+                                        <div class="flex gap-3">
+                                            <div class="text-center">
+                                                <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">Histórico</div>
+                                                <div class="w-16 py-2 bg-gray-50 text-gray-400 font-mono text-sm rounded border">{{ getHistoryValue(currentStep === 1 ? 'obra' : 'projeto', item.id) }}</div>
+                                            </div>
+                                            <div class="text-center">
+                                                <div class="text-[10px] text-blue-600 font-bold uppercase mb-1">Sua Nota</div>
+                                                <input type="number" min="0" max="10" step="0.1" v-model.number="getFormScoreObj(currentStep === 1 ? 'obra' : 'projeto')[item.id]" 
+                                                    class="w-16 py-2 text-center font-bold border-2 border-gray-300 rounded focus:border-blue-500 outline-none">
+                                            </div>
+                                            <div class="text-center relative">
+                                                <div class="text-[10px] text-green-600 font-bold uppercase mb-1">Final</div>
+                                                <div class="w-16 py-2 font-bold bg-green-50 text-green-700 rounded border border-green-200"
+                                                     :class="{'bg-yellow-100 text-yellow-800 border-yellow-300': isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)}">
+                                                    {{ calculateItemScore(currentStep === 1 ? 'obra' : 'projeto', item.id) }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div v-if="isDamped(currentStep === 1 ? 'obra' : 'projeto', item.id)" class="mt-3 pt-3 border-t border-gray-100">
+                                        <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
+                                            <p class="text-xs text-yellow-800 font-bold mb-1">⚠️ Variação brusca detectada: Justificativa Obrigatória</p>
+                                            <textarea v-model="justifications[(currentStep === 1 ? 'obra' : 'projeto') + item.id]"
+                                                class="w-full text-sm bg-white border border-yellow-300 rounded p-2 outline-none" rows="2" placeholder="Explique o motivo da variação..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="flex-1 flex items-center justify-center text-gray-400 italic">Etapa marcada como "Não se aplica".</div>
+                </div>
+
+                <div v-if="currentStep === 3" class="flex-1 p-10 text-center flex flex-col items-center justify-center">
+                    <div class="bg-green-100 p-4 rounded-full mb-6">
+                        <span class="text-4xl">✅</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Medição Concluída</h2>
+                    <p class="text-gray-500 mb-8">Revise os índices finais antes de salvar no banco de dados.</p>
+                    <div class="grid grid-cols-2 gap-8 w-full max-w-2xl mb-8">
+                        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                            <span class="text-xs font-bold text-blue-400 uppercase tracking-wider">Índice Obras</span>
+                            <div class="text-5xl font-bold text-blue-600 mt-2">{{ skipSteps.obra ? '-' : currentScoreObra }}</div>
+                        </div>
+                        <div class="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                            <span class="text-xs font-bold text-purple-400 uppercase tracking-wider">Índice Projetos</span>
+                            <div class="text-5xl font-bold text-purple-600 mt-2">{{ skipSteps.projeto ? '-' : currentScoreProjeto }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 border-t bg-white flex justify-between items-center">
+                    <button @click="prevStep" :disabled="currentStep === 0" class="px-6 py-2 rounded border text-gray-600 hover:bg-gray-50 disabled:opacity-30">Voltar</button>
+                    <div v-if="currentStep < 3">
+                        <button @click="nextStep" class="px-8 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg">Próximo Passo &rarr;</button>
+                    </div>
+                    <div v-if="currentStep === 3">
+                        <button @click="saveEvaluation" :disabled="!canSave || loading" 
+                            class="px-8 py-2 rounded bg-green-600 text-white font-bold hover:bg-green-700 disabled:bg-gray-300 flex items-center gap-2 shadow-lg">
+                            <span>{{ loading ? 'Salvando...' : '💾 Salvar e Finalizar' }}</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div v-if="currentStep === 3 && !canSave" class="bg-red-50 text-red-600 text-xs text-center py-2 font-bold border-t border-red-100">
+                    ⚠️ Existem justificativas pendentes. Volte e preencha os campos em amarelo.
+                </div>
             </div>
         </div>
     </main>
@@ -173,76 +275,13 @@
     const { createApp } = Vue;
     const { jsPDF } = window.jspdf;
 
-    // --- CONFIGURAÇÃO DO JSONBIN.IO (PREENCHA AQUI) ---
+    // --- CONFIGURAÇÃO JSONBIN (COLE SUAS CHAVES AQUI) ---
     const BIN_ID = '695d15b5ae596e708fc8e7e9';      // SEU BIN ID
     const API_KEY = '$2a$10$liiTV5DQT6G5KonVb6s4kelHDbpbUiMi4a5s63V8LYgmehkNL8hjS';     // SUA MASTER KEY
 
-    const ITEMS_OBRAS = [
-        { id: '1.1', text: 'Equipe dimensionada e qualificada?', weight: 2, group: 'Qualidade' },
-        { id: '1.2', text: 'Gestão de mão de obra?', weight: 2, group: 'Qualidade' },
-        { id: '1.3', text: 'Atende Especificações Técnicas?', weight: 2, group: 'Qualidade' },
-        { id: '1.4', text: 'Solicitações atendidas nos prazos?', weight: 1, group: 'Qualidade' },
-        { id: '1.5', text: 'Postura pró-ativa?', weight: 1, group: 'Qualidade' },
-        { id: '1.6', text: 'Materiais em conformidade?', weight: 1, group: 'Qualidade' },
-        { id: '1.7', text: 'Evitar reclamações do público?', weight: 1, group: 'Qualidade' },
-        { id: '1.8', text: 'Atende exigências ambientais?', weight: 1, group: 'Qualidade' },
-        { id: '2.1', text: 'Planejamento atende cronograma?', weight: 1, group: 'Prazo' },
-        { id: '2.2', text: 'Inspeção de imóveis vizinhos?', weight: 1, group: 'Prazo' },
-        { id: '2.3', text: 'Atende prazos de documentos?', weight: 2, group: 'Prazo' },
-        { id: '2.4', text: 'Entrega parcial/definitiva?', weight: 2, group: 'Prazo' },
-        { id: '2.5', text: 'Materiais no prazo?', weight: 1, group: 'Prazo' },
-        { id: '2.6', text: 'Balanço de materiais?', weight: 1, group: 'Prazo' },
-        { id: '2.7', text: 'Documentação contratual?', weight: 2, group: 'Prazo' },
-        { id: '3.1', text: 'CLT registrada?', weight: 2, group: 'Organização' },
-        { id: '3.2', text: 'Obrigações trabalhistas?', weight: 2, group: 'Organização' },
-        { id: '3.3', text: 'Ações administrativas?', weight: 1, group: 'Organização' },
-        { id: '3.4', text: 'Uniformes/Crachás?', weight: 1, group: 'Organização' },
-        { id: '3.5', text: 'Veículos identificados?', weight: 1, group: 'Organização' },
-        { id: '3.6', text: 'Instalações adequadas?', weight: 1, group: 'Organização' },
-        { id: '4.1', text: 'Legal SST?', weight: 2, group: 'SST' },
-        { id: '4.2', text: 'APR?', weight: 1, group: 'SST' },
-        { id: '4.3', text: 'Água potável?', weight: 2, group: 'SST' },
-        { id: '4.4', text: 'Banheiros?', weight: 3, group: 'SST' },
-        { id: '4.5', text: 'Local refeição?', weight: 1, group: 'SST' },
-        { id: '4.6', text: 'Vestiário?', weight: 1, group: 'SST' },
-        { id: '4.7', text: 'Soldagem?', weight: 1, group: 'SST' },
-        { id: '4.8', text: 'Eletricidade?', weight: 1, group: 'SST' },
-        { id: '4.9', text: 'Escavação?', weight: 1, group: 'SST' },
-        { id: '4.10', text: 'Espaço confinado?', weight: 1, group: 'SST' },
-        { id: '4.11', text: 'Limpeza?', weight: 1, group: 'SST' },
-        { id: '4.12', text: 'Prod. Químicos?', weight: 1, group: 'SST' },
-        { id: '4.13', text: 'Altura?', weight: 1, group: 'SST' },
-        { id: '4.14', text: 'Máquinas?', weight: 1, group: 'SST' },
-        { id: '4.15', text: 'EPIs?', weight: 1, group: 'SST' },
-        { id: '4.16', text: 'EPCs?', weight: 1, group: 'SST' },
-        { id: '4.17', text: 'DDS?', weight: 1, group: 'SST' }
-    ];
-
-    const ITEMS_PROJETOS = [
-        { id: '1.1', text: 'Equipe qualificada?', weight: 2, group: 'Qualidade' },
-        { id: '1.2', text: 'Gestão mão de obra?', weight: 2, group: 'Qualidade' },
-        { id: '1.3', text: 'Produtos conforme TR?', weight: 2, group: 'Qualidade' },
-        { id: '1.4', text: 'Atende Proposta Técnica?', weight: 1, group: 'Qualidade' },
-        { id: '1.5', text: 'Prazos atendidos?', weight: 1, group: 'Qualidade' },
-        { id: '1.6', text: 'Postura pró-ativa?', weight: 1, group: 'Qualidade' },
-        { id: '1.7', text: 'Especificação materiais?', weight: 1, group: 'Qualidade' },
-        { id: '1.8', text: 'Exigências ambientais?', weight: 1, group: 'Qualidade' },
-        { id: '2.1', text: 'Planejamento/Cronograma?', weight: 1, group: 'Prazo' },
-        { id: '2.2', text: 'Prazos contratuais?', weight: 1, group: 'Prazo' },
-        { id: '2.3', text: 'Entrega parcial/definitiva?', weight: 2, group: 'Prazo' },
-        { id: '2.4', text: 'Documentação?', weight: 2, group: 'Prazo' },
-        { id: '3.1', text: 'CLT?', weight: 2, group: 'Organização' },
-        { id: '3.2', text: 'Obrigações trabalhistas?', weight: 2, group: 'Organização' },
-        { id: '3.3', text: 'Ações corretivas?', weight: 1, group: 'Organização' },
-        { id: '3.4', text: 'Uniformes?', weight: 1, group: 'Organização' },
-        { id: '3.5', text: 'Veículos?', weight: 1, group: 'Organização' },
-        { id: '3.6', text: 'Instalações?', weight: 1, group: 'Organização' },
-        { id: '3.7', text: 'Conduta c/ cliente?', weight: 1, group: 'Organização' },
-        { id: '4.1', text: 'Legal SST?', weight: 2, group: 'SST' },
-        { id: '4.2', text: 'EPIs?', weight: 1, group: 'SST' },
-        { id: '4.3', text: 'EPCs?', weight: 2, group: 'SST' },
-        { id: '4.4', text: 'APR?', weight: 3, group: 'SST' }
-    ];
+    // Definições de Itens (Mesmas das versões anteriores)
+    const ITEMS_OBRAS = [ { id: '1.1', weight: 2, group: 'Qualidade' }, { id: '1.2', weight: 2, group: 'Qualidade' }, { id: '1.3', weight: 2, group: 'Qualidade' }, { id: '1.4', weight: 1, group: 'Qualidade' }, { id: '1.5', weight: 1, group: 'Qualidade' }, { id: '1.6', weight: 1, group: 'Qualidade' }, { id: '1.7', weight: 1, group: 'Qualidade' }, { id: '1.8', weight: 1, group: 'Qualidade' }, { id: '2.1', weight: 1, group: 'Prazo' }, { id: '2.2', weight: 1, group: 'Prazo' }, { id: '2.3', weight: 2, group: 'Prazo' }, { id: '2.4', weight: 2, group: 'Prazo' }, { id: '2.5', weight: 1, group: 'Prazo' }, { id: '2.6', weight: 1, group: 'Prazo' }, { id: '2.7', weight: 2, group: 'Prazo' }, { id: '3.1', weight: 2, group: 'Organização' }, { id: '3.2', weight: 2, group: 'Organização' }, { id: '3.3', weight: 1, group: 'Organização' }, { id: '3.4', weight: 1, group: 'Organização' }, { id: '3.5', weight: 1, group: 'Organização' }, { id: '3.6', weight: 1, group: 'Organização' }, { id: '4.1', weight: 2, group: 'SST' }, { id: '4.2', weight: 1, group: 'SST' }, { id: '4.3', weight: 2, group: 'SST' }, { id: '4.4', weight: 3, group: 'SST' }, { id: '4.5', weight: 1, group: 'SST' }, { id: '4.6', weight: 1, group: 'SST' }, { id: '4.7', weight: 1, group: 'SST' }, { id: '4.8', weight: 1, group: 'SST' }, { id: '4.9', weight: 1, group: 'SST' }, { id: '4.10', weight: 1, group: 'SST' }, { id: '4.11', weight: 1, group: 'SST' }, { id: '4.12', weight: 1, group: 'SST' }, { id: '4.13', weight: 1, group: 'SST' }, { id: '4.14', weight: 1, group: 'SST' }, { id: '4.15', weight: 1, group: 'SST' }, { id: '4.16', weight: 1, group: 'SST' }, { id: '4.17', weight: 1, group: 'SST' } ];
+    const ITEMS_PROJETOS = [ { id: '1.1', weight: 2, group: 'Qualidade' }, { id: '1.2', weight: 2, group: 'Qualidade' }, { id: '1.3', weight: 2, group: 'Qualidade' }, { id: '1.4', weight: 1, group: 'Qualidade' }, { id: '1.5', weight: 1, group: 'Qualidade' }, { id: '1.6', weight: 1, group: 'Qualidade' }, { id: '1.7', weight: 1, group: 'Qualidade' }, { id: '1.8', weight: 1, group: 'Qualidade' }, { id: '2.1', weight: 1, group: 'Prazo' }, { id: '2.2', weight: 1, group: 'Prazo' }, { id: '2.3', weight: 2, group: 'Prazo' }, { id: '2.4', weight: 2, group: 'Prazo' }, { id: '3.1', weight: 2, group: 'Organização' }, { id: '3.2', weight: 2, group: 'Organização' }, { id: '3.3', weight: 1, group: 'Organização' }, { id: '3.4', weight: 1, group: 'Organização' }, { id: '3.5', weight: 1, group: 'Organização' }, { id: '3.6', weight: 1, group: 'Organização' }, { id: '3.7', weight: 1, group: 'Organização' }, { id: '4.1', weight: 2, group: 'SST' }, { id: '4.2', weight: 1, group: 'SST' }, { id: '4.3', weight: 2, group: 'SST' }, { id: '4.4', weight: 3, group: 'SST' } ];
 
     createApp({
         data() {
@@ -258,7 +297,7 @@
                 formScores: { obra: {}, projeto: {} },
                 justifications: {},
                 historyScores: { obra: {}, projeto: {} },
-                importLogs: [] // LOGS PARA DEBUG
+                importLogs: []
             }
         },
         computed: {
@@ -282,7 +321,21 @@
             },
             structureObra() { return this.groupItems(ITEMS_OBRAS); },
             structureProjeto() { return this.groupItems(ITEMS_PROJETOS); },
-            canSave() { return true; } // Simplificado para este exemplo
+            canSave() {
+                if (!this.formInput.contractId || !this.formInput.monthRef || !this.formInput.engineer) return false;
+                const types = ['obra', 'projeto'];
+                for(let type of types) {
+                    if (this.skipSteps[type]) continue;
+                    const items = type === 'obra' ? ITEMS_OBRAS : ITEMS_PROJETOS;
+                    for(let item of items) {
+                        if (this.isDamped(type, item.id)) {
+                            const justKey = type + item.id;
+                            if (!this.justifications[justKey] || this.justifications[justKey].length < 3) return false;
+                        }
+                    }
+                }
+                return true;
+            }
         },
         methods: {
             async init() {
@@ -302,11 +355,15 @@
             async saveData() {
                 this.loading = true;
                 if (this.isConfigured) {
-                    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' },
-                        body: JSON.stringify(this.contracts)
-                    });
+                    try {
+                        await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' },
+                            body: JSON.stringify(this.contracts)
+                        });
+                    } catch (e) {
+                        alert("Erro ao salvar online.");
+                    }
                 } else {
                     localStorage.setItem('fac_local_data', JSON.stringify(this.contracts));
                 }
@@ -320,6 +377,7 @@
                     this.saveData();
                 }
             },
+            selectContract(c) { this.selectedContract = c; this.$nextTick(() => this.renderChart()); },
             async deleteContract() {
                 if (!this.selectedContract) return;
                 if (!confirm("Excluir contrato?")) return;
@@ -328,177 +386,144 @@
                 this.selectedContract = null;
             },
 
-            // --- IMPORTAÇÃO V14: FORCE BRUTE ---
+            // --- IMPORTAÇÃO V15: ULTRA TOLERANTE ---
             importLegacyExcel(event) {
                 const files = event.target.files;
                 if (!files.length || !this.selectedContract) return;
 
                 this.importLogs = [];
+                this.importLogs.push("Iniciando importação V15...");
+
                 let processedCount = 0;
                 let groupedByMonth = {}; 
 
                 Array.from(files).forEach(file => {
-                    this.importLogs.push(`Lendo arquivo: ${file.name}`);
-                    
                     Papa.parse(file, {
                         header: false,
                         skipEmptyLines: true,
-                        encoding: "ISO-8859-1", // Tenta forçar codificação PT-BR
                         complete: (results) => {
-                            this.parseRawSheetV14(results.data, groupedByMonth, file.name);
+                            this.parseFileV15(results.data, groupedByMonth, file.name);
                             processedCount++;
                             if (processedCount === files.length) {
                                 this.finalizeImport(groupedByMonth);
                             }
                         },
-                        error: (err) => this.importLogs.push(`ERRO no PapaParse: ${err.message}`)
+                        error: (err) => this.importLogs.push(`ERRO CRÍTICO no arquivo ${file.name}: ${err.message}`)
                     });
                 });
             },
 
-            parseRawSheetV14(rows, groupedData, fileName) {
+            parseFileV15(rows, groupedData, fileName) {
                 let type = null;
                 let monthRef = null;
                 let engineer = "Importado";
                 let scores = {};
-                let foundAnyScore = false;
-
-                // 1. VARREDURA DE METADADOS (LINHA A LINHA)
-                for (let i = 0; i < Math.min(rows.length, 30); i++) {
-                    const rowStr = rows[i].join(' ').toUpperCase();
-                    
-                    if (rowStr.includes("FAC") && rowStr.includes("OBRA")) type = "OBRA";
-                    if (rowStr.includes("FAC") && rowStr.includes("PROJETO")) type = "PROJETO";
-                    
+                
+                // 1. Busca por TIPO e ENGENHEIRO
+                for (const row of rows) {
+                    const rowStr = row.join(' ').toUpperCase();
+                    if (rowStr.includes("FAC | OBRAS") || rowStr.includes("FAC|OBRAS") || rowStr.includes("FAC | OBRA")) type = "OBRA";
+                    if (rowStr.includes("FAC | PROJETOS") || rowStr.includes("FAC|PROJETOS") || rowStr.includes("FAC | PROJETO")) type = "PROJETO";
                     if (rowStr.includes("RESPONSAVEL")) {
-                        if (rows[i+1]) engineer = rows[i+1][0] || rows[i+1][1] || "Importado";
-                    }
-
-                    // Caça-Datas Agressivo: Procura DD/MM/AA em qualquer lugar
-                    const dateMatch = rowStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-                    if (dateMatch && !monthRef) {
-                        let year = dateMatch[3];
-                        if (year.length === 2) year = "20" + year;
-                        monthRef = `${year}-${dateMatch[2]}`;
-                        this.importLogs.push(`> ${fileName}: Data encontrada: ${monthRef}`);
+                        // Tenta achar nome...
                     }
                 }
 
-                if (!type) this.importLogs.push(`> ${fileName}: AVISO - Não achei 'FAC | OBRAS' ou 'PROJETOS'. Assumindo indefinido.`);
-                if (!monthRef) this.importLogs.push(`> ${fileName}: ERRO - Não achei data (dd/mm/aa).`);
+                // 2. Busca por DATA
+                for (const row of rows) {
+                    const rowStr = row.join(' ');
+                    const matches = rowStr.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+                    if (matches) {
+                        let year = matches[3];
+                        if (year.length === 2) year = "20" + year;
+                        if (parseInt(year) > 2020 && parseInt(year) < 2030) {
+                            monthRef = `${year}-${matches[2]}`;
+                            break; 
+                        }
+                    }
+                }
 
+                if (!type) this.importLogs.push(`ALERTA (${fileName}): Não identifiquei se é OBRA ou PROJETO.`);
+                if (!monthRef) this.importLogs.push(`ERRO (${fileName}): Não encontrei data válida.`);
+                
                 if (!monthRef) return; 
 
-                // 2. VARREDURA DE NOTAS (SCANNER DE LINHA)
-                rows.forEach((row, rowIdx) => {
-                    // Procura o padrão "1.1" ou "2.3" nas primeiras 3 colunas
+                // 3. Busca por NOTAS (Varredura Linha a Linha)
+                rows.forEach(row => {
                     let itemID = null;
-                    for (let c = 0; c < 3; c++) {
-                        const val = row[c] ? row[c].toString().trim() : "";
-                        if (/^\d+\.\d+$/.test(val)) {
-                            itemID = val;
+                    for (let c = 0; c < 5; c++) {
+                        const cell = row[c] ? row[c].toString().trim() : "";
+                        if (/^\d+\.\d+$/.test(cell)) {
+                            itemID = cell;
                             break;
                         }
                     }
 
                     if (itemID) {
-                        // Se achou um ID, procura um número na mesma linha (colunas I, J, H...)
-                        // Vamos varrer a linha inteira procurando um número <= 10 e > 0
-                        // Mas priorizando da direita para a esquerda ou coluna I (8)
-                        
-                        let noteFound = null;
-                        
-                        // Tenta Coluna I (8) primeiro (padrão do usuário)
-                        if (row[8] && !isNaN(parseFloat(row[8].toString().replace(',','.')))) {
-                            noteFound = parseFloat(row[8].toString().replace(',','.'));
-                        } 
-                        // Se não, tenta varrer a linha procurando valor numérico válido (fallback)
-                        else {
-                            for (let c = 5; c < row.length; c++) {
-                                const val = row[c] ? row[c].toString().replace(',', '.') : "";
-                                const num = parseFloat(val);
-                                // Regra: Nota deve ser entre 0 e 10
-                                if (!isNaN(num) && num >= 0 && num <= 10) {
-                                    noteFound = num;
-                                    // Não damos break para pegar a última ocorrência (caso tenha média depois)
-                                    // Na verdade, na imagem, a média está na J (9). A nota está na I (8).
-                                    // Então se acharmos na 8, é ela.
-                                    if (c === 8) break; 
-                                }
+                        // Heurística: Pega o último número válido na linha (0-10)
+                        let foundVals = [];
+                        for (let c = 0; c < row.length; c++) {
+                            const valStr = row[c] ? row[c].toString().replace(',', '.') : "";
+                            const val = parseFloat(valStr);
+                            if (!isNaN(val) && val >= 0 && val <= 10) {
+                                foundVals.push(val);
                             }
                         }
-
-                        if (noteFound !== null) {
-                            scores[itemID] = noteFound;
-                            foundAnyScore = true;
+                        if (foundVals.length > 0) {
+                            scores[itemID] = foundVals[foundVals.length - 1];
                         }
                     }
                 });
 
-                if (foundAnyScore) {
-                    this.importLogs.push(`> ${fileName}: Li ${Object.keys(scores).length} notas.`);
-                    
-                    if (!groupedData[monthRef]) {
-                        groupedData[monthRef] = { monthRef, engineer, scoresObra: {}, scoresProjeto: {} };
-                    }
-                    if (type === "OBRA") groupedData[monthRef].scoresObra = { ...groupedData[monthRef].scoresObra, ...scores };
-                    else groupedData[monthRef].scoresProjeto = { ...groupedData[monthRef].scoresProjeto, ...scores }; // Se não achou tipo, joga em projeto ou obra? Melhor assumir projeto se não for obra.
-                    
-                    if (type === "OBRA" && !type) groupedData[monthRef].scoresObra = scores; // Fallback
+                if (Object.keys(scores).length === 0) {
+                    this.importLogs.push(`ALERTA (${fileName}): Data OK, Tipo OK, mas ZERO notas.`);
                 } else {
-                    this.importLogs.push(`> ${fileName}: AVISO - Nenhuma nota encontrada (padrão X.X).`);
+                    this.importLogs.push(`SUCESSO (${fileName}): ${monthRef} - ${type || 'Indefinido'} - ${Object.keys(scores).length} notas.`);
+                    
+                    if (!groupedData[monthRef]) groupedData[monthRef] = { monthRef, engineer, scoresObra: {}, scoresProjeto: {} };
+                    if (type === "OBRA") groupedData[monthRef].scoresObra = { ...groupedData[monthRef].scoresObra, ...scores };
+                    else groupedData[monthRef].scoresProjeto = { ...groupedData[monthRef].scoresProjeto, ...scores };
                 }
             },
 
             finalizeImport(groupedData) {
-                let updatedCount = 0;
-                let createdCount = 0;
-
+                let count = 0;
                 for (const mes in groupedData) {
                     const entry = groupedData[mes];
                     const existingIndex = this.selectedContract.history.findIndex(h => h.monthRef === mes);
+                    
+                    const finalScoreObra = this.calculateScore(ITEMS_OBRAS, entry.scoresObra);
+                    const finalScoreProjeto = this.calculateScore(ITEMS_PROJETOS, entry.scoresProjeto);
+
+                    const payload = {
+                        id: Date.now() + Math.random(),
+                        date: new Date().toISOString(),
+                        monthRef: entry.monthRef,
+                        engineer: entry.engineer,
+                        skippedObra: Object.keys(entry.scoresObra).length === 0,
+                        skippedProjeto: Object.keys(entry.scoresProjeto).length === 0,
+                        finalScoreObra,
+                        finalScoreProjeto,
+                        finalItemScoresObra: entry.scoresObra,
+                        finalItemScoresProjeto: entry.scoresProjeto,
+                        justifications: {}
+                    };
 
                     if (existingIndex >= 0) {
-                        const existing = this.selectedContract.history[existingIndex];
-                        existing.finalItemScoresObra = { ...existing.finalItemScoresObra, ...entry.scoresObra };
-                        existing.finalItemScoresProjeto = { ...existing.finalItemScoresProjeto, ...entry.scoresProjeto };
-                        
-                        if (Object.keys(entry.scoresObra).length > 0) existing.skippedObra = false;
-                        if (Object.keys(entry.scoresProjeto).length > 0) existing.skippedProjeto = false;
-                        
-                        existing.finalScoreObra = existing.skippedObra ? null : this.calculateScoreFromImport(ITEMS_OBRAS, existing.finalItemScoresObra);
-                        existing.finalScoreProjeto = existing.skippedProjeto ? null : this.calculateScoreFromImport(ITEMS_PROJETOS, existing.finalItemScoresProjeto);
-                        updatedCount++;
+                        this.selectedContract.history[existingIndex] = payload; 
                     } else {
-                        const skippedObra = Object.keys(entry.scoresObra).length === 0;
-                        const skippedProjeto = Object.keys(entry.scoresProjeto).length === 0;
-                        
-                        const payload = {
-                            id: Date.now() + Math.random(),
-                            date: new Date().toISOString(),
-                            monthRef: entry.monthRef,
-                            engineer: entry.engineer,
-                            skippedObra,
-                            skippedProjeto,
-                            finalScoreObra: skippedObra ? null : this.calculateScoreFromImport(ITEMS_OBRAS, entry.scoresObra),
-                            finalScoreProjeto: skippedProjeto ? null : this.calculateScoreFromImport(ITEMS_PROJETOS, entry.scoresProjeto),
-                            finalItemScoresObra: entry.scoresObra,
-                            finalItemScoresProjeto: entry.scoresProjeto,
-                            justifications: {}
-                        };
                         this.selectedContract.history.push(payload);
-                        createdCount++;
                     }
+                    count++;
                 }
-
                 this.saveData();
                 this.renderChart();
-                this.importLogs.push(`CONCLUSÃO: ${createdCount} novos, ${updatedCount} atualizados.`);
-                alert(`Importação Finalizada. Veja o painel de log (cinza) para detalhes.`);
+                if (count > 0) alert("Importação concluída com sucesso!");
+                else alert("Nenhum dado válido. Veja o log preto.");
             },
 
-            // --- REUTILIZADO ---
-            calculateScoreFromImport(items, scores) {
+            calculateScore(items, scores) {
+                if (Object.keys(scores).length === 0) return null;
                 const groups = ['Qualidade', 'Prazo', 'Organização', 'SST'];
                 let groupAverages = [];
                 groups.forEach(g => {
@@ -506,7 +531,7 @@
                     let sumProd = 0; let sumWeight = 0;
                     groupItems.forEach(i => {
                         const val = scores[i.id];
-                        if (val !== undefined && val !== null && val !== '') {
+                        if (val !== undefined) {
                             sumProd += (val * i.weight);
                             sumWeight += i.weight;
                         }
@@ -516,6 +541,7 @@
                 if (groupAverages.length === 0) return 0;
                 return (groupAverages.reduce((a,b) => a+b, 0) / groupAverages.length).toFixed(2);
             },
+            
             selectContract(c) { this.selectedContract = c; this.$nextTick(() => this.renderChart()); },
             groupItems(items) {
                 const groups = ['Qualidade', 'Prazo', 'Organização', 'SST'];
@@ -560,6 +586,8 @@
             },
             currentScoreObra() { return this.calculateFinalAggregate(ITEMS_OBRAS, 'obra'); },
             currentScoreProjeto() { return this.calculateFinalAggregate(ITEMS_PROJETOS, 'projeto'); },
+            
+            // WIZARD START
             startNewEvaluation() {
                 this.currentStep = 0;
                 this.formInput = { contractId: null, monthRef: new Date().toISOString().slice(0, 7), engineer: '' };
